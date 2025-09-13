@@ -1,0 +1,38 @@
+spring:
+  # Configuração de banco em memória para testes
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  
+  # Redis para testes (Testcontainers ou embedded)
+  redis:
+    host: localhost
+    port: 6370
+    timeout: 2000ms
+
+# Configuração dos clientes Feign para apontar para WireMock
+feign:
+  client:
+    config:
+      customer-service:
+        url: http://localhost:8081
+      product-service:
+        url: http://localhost:8082
+      order-service:
+        url: http://localhost:8083
+      subscription-service:
+        url: http://localhost:8084
+
+# Configurações de logging para testes
+logging:
+  level:
+    com.techbra.bff: DEBUG
+    org.springframework.web: DEBUG
+    feign: DEBUG
