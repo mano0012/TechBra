@@ -1,0 +1,38 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: bff-service
+  profiles:
+    active: local
+
+# Microservices URLs
+microservices:
+  customer-service:
+    url: http://localhost:8081
+  product-catalog-service:
+    url: http://localhost:8082
+  order-service:
+    url: http://localhost:8083
+  subscription-service:
+    url: http://localhost:8084
+  billing-service:
+    url: http://localhost:8085
+  notification-service:
+    url: http://localhost:8086
+
+# JWT Configuration
+jwt:
+  secret: TechBraBffSecretKeyForPOC2024
+  expiration: 86400000 # 24 hours
+
+# Logging
+logging:
+  level:
+    com.techbra.bff: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
