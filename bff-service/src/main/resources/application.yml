@@ -26,8 +26,8 @@ microservices:
 
 # JWT Configuration
 jwt:
-  secret: TechBraBffSecretKeyForPOC2024
-  expiration: 86400000 # 24 hours
+  secret: 73I1ZPDeYqfdd1AHCAMIhiNOsvy36oaudNGiI+V3OM1f+N8JOe6dNBXQhxvsQXmy
+  expiration: 900000 # 15 minutes
 
 # Logging
 logging:

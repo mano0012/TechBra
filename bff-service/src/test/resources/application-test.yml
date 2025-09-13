@@ -4,31 +4,38 @@ spring:
     url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
     username: sa
-    password: 
-  
+    password:
+
   jpa:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
-  
+
   # Redis para testes (Testcontainers ou embedded)
   redis:
     host: localhost
     port: 6370
     timeout: 2000ms
 
-# Configuração dos clientes Feign para apontar para WireMock
-feign:
-  client:
-    config:
-      customer-service:
-        url: http://localhost:8081
-      product-service:
-        url: http://localhost:8082
-      order-service:
-        url: http://localhost:8083
-      subscription-service:
-        url: http://localhost:8084
+# Microservices URLs
+microservices:
+  customer-service:
+    url: http://localhost:8089 #Test server
+  product-catalog-service:
+    url: http://localhost:8089 #Test server
+  order-service:
+    url: http://localhost:8089 #Test server
+  subscription-service:
+    url: http://localhost:8089 #Test server
+  billing-service:
+    url: http://localhost:8089 #Test server
+  notification-service:
+    url: http://localhost:8089 #Test server
+
+# JWT Configuration
+jwt:
+  secret: tzOZrgOJUbM5ARczyUPSvAsw1fxmNYpaW8IoWKevo4lMMFrz6jF8lZPQ7oB55KiD
+  expiration: 900000 # 15 minutes
 
 # Configurações de logging para testes
 logging:

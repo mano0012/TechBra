@@ -11,19 +11,26 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
         ErrorResponse error = new ErrorResponse(
-            "INTERNAL_ERROR",
-            ex.getMessage(),
-            LocalDateTime.now()
-        );
+                "INTERNAL_ERROR",
+                ex.getMessage(),
+                LocalDateTime.now());
+
+        log.error("========RuntimeException========");
+        log.error(ex.getMessage());
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
-    
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
@@ -32,25 +39,31 @@ public class GlobalExceptionHandler {
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        
+
         ErrorResponse error = new ErrorResponse(
-            "VALIDATION_ERROR",
-            "Dados inválidos: " + errors.toString(),
-            LocalDateTime.now()
-        );
+                "VALIDATION_ERROR",
+                "Dados inválidos: " + errors.toString(),
+                LocalDateTime.now());
+
+        log.error("========ValidationError========");
+        log.error(ex.getMessage());
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
-    
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
         ErrorResponse error = new ErrorResponse(
-            "UNKNOWN_ERROR",
-            "Erro interno do servidor",
-            LocalDateTime.now()
-        );
+                "UNKNOWN_ERROR",
+                "Erro interno do servidor",
+                LocalDateTime.now());
+
+        log.error("========UnknownError========");
+        log.error(ex.getMessage());
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
-    
+
     public static class ErrorResponse {
         private String code;
         private String message;
