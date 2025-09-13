@@ -25,10 +25,13 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String token) {
-        String jwtToken = token.replace("Bearer ", "");
-        authenticationUseCase.logout(jwtToken);
-        return ResponseEntity.ok().build();
-    }
+    /*
+     * @PostMapping("/logout")
+     * public ResponseEntity<Void> logout(@RequestHeader("Authorization") String
+     * token) {
+     * String jwtToken = token.replace("Bearer ", "");
+     * authenticationUseCase.logout(jwtToken);
+     * return ResponseEntity.ok().build();
+     * }
+     */
 }

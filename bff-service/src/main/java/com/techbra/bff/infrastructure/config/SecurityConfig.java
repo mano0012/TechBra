@@ -28,6 +28,15 @@ public class SecurityConfig {
                         .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/health").permitAll()
                         .anyRequest().authenticated())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((req, res, e) -> {
+                            res.setStatus(401);
+                            res.setContentType("application/json");
+                        })
+                        .accessDeniedHandler((req, res, e) -> {
+                            res.setStatus(403);
+                            res.setContentType("application/json");
+                        }))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

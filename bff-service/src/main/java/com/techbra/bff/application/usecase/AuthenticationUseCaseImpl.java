@@ -2,6 +2,7 @@ package com.techbra.bff.application.usecase;
 
 import com.techbra.bff.application.dto.LoginRequest;
 import com.techbra.bff.application.dto.LoginResponse;
+import com.techbra.bff.domain.exception.InvalidCredentialsException;
 import com.techbra.bff.domain.model.User;
 import com.techbra.bff.domain.port.in.AuthenticationUseCase;
 import com.techbra.bff.domain.port.out.AuthenticationPort;
@@ -25,7 +26,7 @@ public class AuthenticationUseCaseImpl implements AuthenticationUseCase {
         User user = authenticationPort.authenticate(request.getEmail(), request.getPassword());
 
         if (user == null) {
-            throw new RuntimeException("Credenciais inválidas");
+            throw new InvalidCredentialsException();
         }
 
         String token = authenticationPort.generateToken(user);

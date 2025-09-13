@@ -4,11 +4,13 @@ import com.techbra.bff.application.dto.ProductResponse;
 import com.techbra.bff.domain.port.in.ProductUseCase;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.validation.annotation.Validated;
 import java.util.List;
 
 @RestController
 @RequestMapping("/products")
+@Validated
 // TODO: Adicionar a URL do front que vai ter permissão para chamar
 // @CrossOrigin(origins = {"http://localhost:8080", "https://app.cliente.com"})
 public class ProductController {
@@ -38,7 +40,8 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<ProductResponse>> searchProducts(@RequestParam String query) {
+    public ResponseEntity<List<ProductResponse>> searchProducts(
+            @RequestParam @NotBlank(message = "query não pode ser vazia") String query) {
         List<ProductResponse> products = productUseCase.searchProducts(query);
         return ResponseEntity.ok(products);
     }
