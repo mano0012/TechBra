@@ -22,26 +22,12 @@ spring:
         # Native profile - file system based configuration
         native:
           search-locations: classpath:/config-repo/
-        # Git profile - for production use
-        git:
-          uri: ${CONFIG_GIT_URI:https://github.com/techbra/config-repo.git}
-          clone-on-start: true
-          force-pull: true
-          delete-untracked-branches: true
-          refresh-rate: 60
-          timeout: 10
-          default-label: main
-          search-paths: '{application}'
         # Security for configuration access
         encrypt:
           enabled: false
-        # Health indicator
+        # Health indicator disabled for Git repository
         health:
-          repositories:
-            config-repo:
-              label: main
-              name: config-repo
-              profiles: default
+          enabled: false
   
   # Security configuration
   security:

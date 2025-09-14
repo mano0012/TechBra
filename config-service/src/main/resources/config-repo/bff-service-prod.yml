@@ -1,6 +1,17 @@
 # TechBra BFF Service - Production Environment Configuration
 # Secure and optimized configuration for production deployment
 
+spring:
+  application:
+    name: bff-service
+  
+  # Security configuration
+  security:
+    jwt:
+      secret: ${JWT_SECRET} # Must be provided via environment
+      expiration: ${JWT_EXPIRATION:900000} # 15 minutes
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION:1800000} # 30 minutes
+
 server:
   port: 8080
   compression:
@@ -170,6 +181,13 @@ management:
 
 # Production info
 info:
+  app:
+    name: ${spring.application.name}
+    description: Backend for Frontend - TechBra E-commerce Platform
+    version: 1.0.0-SNAPSHOT
+  build:
+    version: 1.0.0-SNAPSHOT
+    timestamp: ${build.timestamp:unknown}
   environment: production
   features:
     - "PostgreSQL database"
@@ -178,14 +196,6 @@ info:
     - "Prometheus metrics"
     - "HTTP/2 enabled"
     - "Response compression"
-
-# Security configuration for production
-spring:
-  security:
-    jwt:
-      secret: ${JWT_SECRET} # Must be provided via environment
-      expiration: ${JWT_EXPIRATION:3600000} # 1 hour
-      refresh-expiration: ${JWT_REFRESH_EXPIRATION:86400000} # 24 hours
 
 # Production-specific thread pool configuration
 spring:

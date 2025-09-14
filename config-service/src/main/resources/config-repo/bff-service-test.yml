@@ -5,6 +5,15 @@ server:
   port: 0 # Random port for parallel test execution
 
 spring:
+  application:
+    name: bff-service
+  
+  # Security configuration
+  security:
+    jwt:
+      secret: ${JWT_SECRET:YHoTwXmMxtCvuSSXN8Mo6DWLM7MPmWczzguXV9GJc0CA6OK70ZXXpywaUwUNsLzb}
+      expiration: ${JWT_EXPIRATION:900000} # 15 minutes
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION:1800000} # 30 minutes
   # Test database configuration
   datasource:
     url: jdbc:h2:mem:techbra-test-${random.uuid}
@@ -25,25 +34,25 @@ spring:
 # Mock service URLs for testing
 services:
   customer:
-    url: http://localhost:${wiremock.server.port:8081}/api
+    url: http://localhost:${wiremock.server.port:8089}
     timeout: 2000 # Shorter timeout for tests
     retry:
       max-attempts: 1 # No retries in tests
   
   product-catalog:
-    url: http://localhost:${wiremock.server.port:8082}/api
+    url: http://localhost:${wiremock.server.port:8089}
     timeout: 2000
     retry:
       max-attempts: 1
   
   order:
-    url: http://localhost:${wiremock.server.port:8083}/api
+    url: http://localhost:${wiremock.server.port:8089}
     timeout: 2000
     retry:
       max-attempts: 1
   
   billing:
-    url: http://localhost:${wiremock.server.port:8084}/api
+    url: http://localhost:${wiremock.server.port:8089}
     timeout: 2000
     retry:
       max-attempts: 1
@@ -106,6 +115,13 @@ management:
 
 # Test environment info
 info:
+  app:
+    name: ${spring.application.name}
+    description: Backend for Frontend - TechBra E-commerce Platform
+    version: 1.0.0-SNAPSHOT
+  build:
+    version: 1.0.0-SNAPSHOT
+    timestamp: ${build.timestamp:unknown}
   environment: test
   features:
     - "In-memory H2 database"
@@ -113,11 +129,3 @@ info:
     - "Disabled circuit breakers"
     - "Minimal logging"
     - "Random port assignment"
-
-# JWT configuration for tests
-spring:
-  security:
-    jwt:
-      secret: test-secret-key-for-jwt-tokens
-      expiration: 3600000 # 1 hour for tests
-      refresh-expiration: 7200000 # 2 hours for tests

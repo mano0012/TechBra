@@ -6,14 +6,21 @@ spring:
     name: bff-service
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+
+---
+# Config Server configuration - only for non-test profiles
+spring:
   config:
-    import: configserver:${CONFIG_SERVER_URI:http://localhost:8888}
+    # activate:
+    #   on-profile: "!test"
+    import: "${CONFIG_IMPORT:configserver:${CONFIG_SERVER_URI:http://localhost:8888}}"
   cloud:
     config:
+      enabled: ${CONFIG_ENABLED:true}
       uri: ${CONFIG_SERVER_URI:http://localhost:8888}
       username: ${CONFIG_USERNAME:config-admin}
       password: ${CONFIG_PASSWORD:config-secret}
-      fail-fast: true
+      fail-fast: ${CONFIG_FAIL_FAST:true}
       retry:
         initial-interval: 1000
         max-attempts: 6
@@ -21,6 +28,18 @@ spring:
         multiplier: 1.1
       request-connect-timeout: 5000
       request-read-timeout: 10000
+
+---
+# Test profile configuration - disables Config Server
+# spring:
+#   config:
+#     activate:
+#       on-profile: "test"
+#     import: "optional:file:./"
+#   cloud:
+#     config:
+#       enabled: false
+#       fail-fast: false
 
 # Management endpoints for health checks
 management:

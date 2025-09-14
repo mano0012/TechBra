@@ -1,11 +1,19 @@
 # TechBra BFF Service - Development Environment Configuration
-# Overrides and extends default configuration for local development
+# Complete configuration for local development
 
 server:
   port: 8080
 
 spring:
-  # Development database configuration (if needed)
+  application:
+    name: bff-service
+  
+  # Security configuration
+  security:
+    jwt:
+      secret: ${JWT_SECRET:TfvoXEL50WHUxuGmjkDF8fUPasAncQ4z86cJIKPAHomgHo0D1TaDxifpXa9vq6iY}
+      expiration: ${JWT_EXPIRATION:900000} # 15 minutes
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION:1800000} # 30 minutes
   datasource:
     url: ${DB_URL:jdbc:h2:mem:techbra-dev}
     username: ${DB_USERNAME:sa}
@@ -28,32 +36,70 @@ spring:
 # Development service URLs (local instances)
 services:
   customer:
-    url: http://localhost:8081/api
-    timeout: 10000 # Longer timeout for development
+    url: ${CUSTOMER_SERVICE_URL:http://localhost:8081/api}
+    timeout: ${CUSTOMER_SERVICE_TIMEOUT:10000} # Longer timeout for development
+    retry:
+      max-attempts: 3
+      delay: 1000
   
   product-catalog:
-    url: http://localhost:8082/api
-    timeout: 10000
+    url: ${PRODUCT_CATALOG_SERVICE_URL:http://localhost:8082/api}
+    timeout: ${PRODUCT_CATALOG_SERVICE_TIMEOUT:10000}
+    retry:
+      max-attempts: 3
+      delay: 1000
   
   order:
-    url: http://localhost:8083/api
-    timeout: 10000
+    url: ${ORDER_SERVICE_URL:http://localhost:8083/api}
+    timeout: ${ORDER_SERVICE_TIMEOUT:10000}
+    retry:
+      max-attempts: 3
+      delay: 1000
   
   billing:
-    url: http://localhost:8084/api
-    timeout: 10000
+    url: ${BILLING_SERVICE_URL:http://localhost:8084/api}
+    timeout: ${BILLING_SERVICE_TIMEOUT:10000}
+    retry:
+      max-attempts: 3
+      delay: 1000
 
 # Relaxed circuit breaker for development
 resilience4j:
   circuitbreaker:
     instances:
       customer-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        wait-duration-in-open-state: 10s # Shorter wait time for dev
         failure-rate-threshold: 80 # More lenient in dev
-        wait-duration-in-open-state: 10s # Shorter wait time
+        slow-call-rate-threshold: 80
+        slow-call-duration-threshold: 2s
       
       product-catalog-service:
-        failure-rate-threshold: 80
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
         wait-duration-in-open-state: 10s
+        failure-rate-threshold: 80
+        slow-call-rate-threshold: 80
+        slow-call-duration-threshold: 2s
+  
+  retry:
+    instances:
+      customer-service:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+      
+      product-catalog-service:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
 
 # Enhanced logging for development
 logging:
@@ -84,6 +130,13 @@ management:
 
 # Development info
 info:
+  app:
+    name: ${spring.application.name}
+    description: Backend for Frontend - TechBra E-commerce Platform
+    version: 1.0.0-SNAPSHOT
+  build:
+    version: 1.0.0-SNAPSHOT
+    timestamp: ${build.timestamp:unknown}
   environment: development
   debug: true
   features:
