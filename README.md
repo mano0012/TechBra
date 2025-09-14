@@ -37,6 +37,7 @@ O sistema é composto por múltiplos microserviços independentes, cada um respo
 | Serviço | Porta | Status | Descrição | Documentação |
 |---------|-------|--------|-----------|-------------|
 | **BFF Service** | 8080 | ✅ **Implementado** | Backend for Frontend - Orquestra chamadas para microserviços | [📖 README](bff-service/README.md) |
+| **Config Service** | 8888 | ✅ **Implementado** | Servidor de configuração centralizada para todos os microserviços | [📖 README](config-service/README.md) |
 
 ### 🚧 Serviços Planejados
 
@@ -49,7 +50,7 @@ O sistema é composto por múltiplos microserviços independentes, cada um respo
 | **Logistics Service** | 8085 | 🚧 Planejado | Logística e entrega |
 | **Notification Service** | 8086 | 🚧 Planejado | Notificações e comunicação |
 | **Subscription Service** | 8087 | 🚧 Planejado | Assinaturas e recorrência |
-| **Config Service** | 8888 | 🚧 Planejado | Configuração centralizada |
+
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -57,8 +58,10 @@ O sistema é composto por múltiplos microserviços independentes, cada um respo
 - **Java 17** - Linguagem principal
 - **Spring Boot 3.2+** - Framework principal
 - **Spring Cloud 2023.0.0** - Microserviços
+- **Spring Cloud Config** - Configuração centralizada
 - **Spring Security** - Segurança e autenticação
 - **Spring Cloud OpenFeign** - Comunicação entre serviços
+- **Resilience4j** - Circuit Breaker e padrões de resiliência
 - **JWT** - Autenticação stateless
 - **Maven** - Gerenciamento de dependências
 
@@ -79,14 +82,27 @@ O sistema é composto por múltiplos microserviços independentes, cada um respo
 
 ## 📊 Status do Projeto
 
-### 🎯 Funcionalidades Implementadas (BFF Service)
+### 🎯 Funcionalidades Implementadas
 
+#### BFF Service
 - ✅ **Autenticação JWT** - Login e validação de tokens
 - ✅ **Gerenciamento de Produtos** - CRUD e busca de produtos
+- ✅ **Circuit Breaker** - Resilience4j para resiliência de microserviços
+- ✅ **Config Client** - Integração com Config Server para configurações centralizadas
 - ✅ **Health Check** - Monitoramento de saúde do serviço
 - ✅ **Exception Handling** - Tratamento global de erros
 - ✅ **Security Configuration** - Configuração de segurança
 - ✅ **Arquitetura Hexagonal** - Clean Architecture implementada
+
+#### Config Service
+- ✅ **Configuração Centralizada** - Spring Cloud Config Server para todos os microserviços
+- ✅ **Múltiplos Ambientes** - Profiles específicos (dev, test, prod)
+- ✅ **Repositório Git** - Configurações versionadas e auditáveis
+- ✅ **Refresh Dinâmico** - Atualização de configurações sem restart
+- ✅ **Criptografia** - Suporte a propriedades criptografadas
+- ✅ **Health Check Customizado** - Monitoramento específico do repositório de configurações (Git)
+- ✅ **Containerização** - Docker pronto para produção
+- 🚧 **Testes Completos** - Testes unitários e de integração
 
 ### 🚧 Em Desenvolvimento
 
@@ -110,6 +126,19 @@ Documentação detalhada disponível:
 - **[Guia de Deploy](bff-service/docs/DEPLOYMENT_GUIDE.md)** - Configuração de ambientes
 - **[Guia de Configuração](bff-service/docs/CONFIGURATION_GUIDE.md)** - Configurações detalhadas
 
+### 📖 Config Service (Implementado)
+
+Para documentação completa do Config Service, consulte:
+
+**📖 [Config Service README](config-service/README.md)**
+
+Documentação detalhada disponível:
+- **Configuração Centralizada** - Gerenciamento de configurações para todos os microserviços
+- **Múltiplos Ambientes** - Configurações específicas para dev, test e prod
+- **Health Checks** - Monitoramento da conectividade com repositórios
+- **Containerização** - Docker e scripts de deploy automatizados
+- **Testes** - Cobertura completa com testes unitários e de integração
+
 ### 🚧 Outros Serviços (Planejados)
 
 A documentação dos demais microserviços será criada conforme forem implementados:
@@ -121,7 +150,48 @@ A documentação dos demais microserviços será criada conforme forem implement
 - **Logistics Service** - Em planejamento
 - **Notification Service** - Em planejamento
 - **Subscription Service** - Em planejamento
-- **Config Service** - Em planejamento
+
+## 🚀 Como Executar
+
+### Pré-requisitos
+- Java 17+
+- Maven 3.8+
+- Git (para repositório de configurações)
+- Docker (opcional)
+
+### Execução Local
+
+1. **Clone o repositório**
+   ```bash
+   git clone <repository-url>
+   cd techbra-platform
+   ```
+
+2. **Execute os serviços na ordem correta**
+   
+   **Primeiro: Config Service (obrigatório)**
+   ```bash
+   cd config-service
+   mvn spring-boot:run
+   ```
+   
+   **Segundo: BFF Service**
+   ```bash
+   cd ../bff-service
+   mvn spring-boot:run
+   ```
+
+3. **Verifique se os serviços estão funcionando**
+   - Config Service: http://localhost:8888/actuator/health
+   - BFF Service: http://localhost:8080/api/health
+   - Circuit Breaker Metrics: http://localhost:8080/actuator/circuitbreakers
+
+### ⚠️ Ordem de Inicialização
+
+**IMPORTANTE**: O Config Service deve ser iniciado **ANTES** do BFF Service, pois:
+- O BFF Service depende das configurações centralizadas
+- Sem o Config Server, o BFF Service falhará na inicialização
+- As configurações de Circuit Breaker são carregadas do Config Server
 
 ## 🧪 Testes
 
@@ -138,6 +208,22 @@ mvn verify -P integration-tests
 
 # Cobertura de código
 mvn jacoco:report
+```
+
+### Config Service
+
+```bash
+cd config-service
+
+# Testes unitários e de integração
+mvn test
+
+# Build e deploy (Linux/Mac)
+./build.sh
+./deploy.sh dev
+
+# Build e deploy (Windows)
+.\build-and-deploy.ps1 -Environment dev
 ```
 
 ## 🤝 Contribuição
@@ -160,10 +246,11 @@ mvn jacoco:report
 ### Roadmap de Desenvolvimento
 
 1. **Fase 1** ✅ - BFF Service (Concluído)
-2. **Fase 2** 🚧 - Customer Service (Em planejamento)
-3. **Fase 3** 🚧 - Product Catalog Service (Em planejamento)
-4. **Fase 4** 🚧 - Order Service (Em planejamento)
-5. **Fase 5** 🚧 - Demais microserviços
+2. **Fase 2** ✅ - Config Service (Concluído)
+3. **Fase 3** 🚧 - Customer Service (Em planejamento)
+4. **Fase 4** 🚧 - Product Catalog Service (Em planejamento)
+5. **Fase 5** 🚧 - Order Service (Em planejamento)
+6. **Fase 6** 🚧 - Demais microserviços
 
 ## 📄 Licença
 
@@ -181,7 +268,7 @@ Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) par
 **Versão Atual**: 1.0.0-SNAPSHOT  
 **Última Atualização**: Janeiro 2024  
 **Status**: 🚧 Em Desenvolvimento Ativo  
-**Serviços Implementados**: 1/8 (BFF Service)
+**Serviços Implementados**: 2/8 (BFF Service, Config Service)
 
 ---
 
