@@ -1,0 +1,211 @@
+# TechBra Billing Service - Default Configuration
+# Microservice responsible for payment processing and billing management
+
+spring:
+  application:
+    name: billing-service
+  
+  # Database configuration
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/techbra_billing}
+    username: ${DB_USERNAME:techbra_user}
+    password: ${DB_PASSWORD:techbra_pass}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:validate}
+    show-sql: ${SHOW_SQL:false}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  
+  # Message broker configuration (RabbitMQ)
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+
+server:
+  port: 8084
+
+# External service integrations
+services:
+  order:
+    url: ${ORDER_SERVICE_URL:http://localhost:8083/api}
+    timeout: ${ORDER_SERVICE_TIMEOUT:3000}
+  
+  customer:
+    url: ${CUSTOMER_SERVICE_URL:http://localhost:8081/api}
+    timeout: ${CUSTOMER_SERVICE_TIMEOUT:3000}
+  
+  notification:
+    url: ${NOTIFICATION_SERVICE_URL:http://localhost:8086/api}
+    timeout: ${NOTIFICATION_SERVICE_TIMEOUT:3000}
+  
+  config:
+    url: ${CONFIG_SERVICE_URL:http://localhost:8888}
+
+# Payment gateway integrations
+payment:
+  gateways:
+    stripe:
+      api-key: ${STRIPE_API_KEY}
+      webhook-secret: ${STRIPE_WEBHOOK_SECRET}
+      enabled: ${STRIPE_ENABLED:true}
+    
+    paypal:
+      client-id: ${PAYPAL_CLIENT_ID}
+      client-secret: ${PAYPAL_CLIENT_SECRET}
+      mode: ${PAYPAL_MODE:sandbox}
+      enabled: ${PAYPAL_ENABLED:false}
+    
+    pix:
+      enabled: ${PIX_ENABLED:true}
+      bank-code: ${PIX_BANK_CODE}
+      account: ${PIX_ACCOUNT}
+  
+  processing:
+    timeout: 30000 # 30 seconds
+    retry-attempts: 3
+    retry-delay: 5000 # 5 seconds
+  
+  security:
+    encryption-key: ${PAYMENT_ENCRYPTION_KEY}
+    hash-algorithm: SHA-256
+
+# Billing service specific configuration
+billing:
+  invoice:
+    auto-generate: true
+    due-days: 30
+    reminder-days: [7, 3, 1]
+  
+  tax:
+    default-rate: 0.18 # 18% Brazilian tax rate
+    calculation-service: internal
+  
+  currency:
+    default: BRL
+    supported: [BRL, USD, EUR]
+  
+  limits:
+    max-transaction-amount: 50000.00
+    daily-limit: 100000.00
+    monthly-limit: 1000000.00
+
+# Circuit breaker configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      stripe-gateway:
+        register-health-indicator: true
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 25
+        wait-duration-in-open-state: 60s
+        slow-call-rate-threshold: 25
+        slow-call-duration-threshold: 10s
+      
+      paypal-gateway:
+        register-health-indicator: true
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 25
+        wait-duration-in-open-state: 60s
+      
+      order-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+  
+  retry:
+    instances:
+      payment-processing:
+        max-attempts: 3
+        wait-duration: 2000ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+      
+      notification-service:
+        max-attempts: 2
+        wait-duration: 1000ms
+
+# Message queues configuration
+rabbitmq:
+  exchanges:
+    billing-events: billing.events
+    payment-events: payment.events
+    billing-dlx: billing.dlx
+  
+  queues:
+    payment-processed: payment.processed
+    payment-failed: payment.failed
+    invoice-generated: invoice.generated
+    refund-processed: refund.processed
+  
+  routing-keys:
+    payment-success: payment.success
+    payment-failure: payment.failure
+    payment-refund: payment.refund
+    invoice-created: invoice.created
+
+# Security configuration
+security:
+  payment:
+    pci-compliance: true
+    data-encryption: true
+    audit-logging: true
+  
+  webhook:
+    signature-validation: true
+    ip-whitelist: ${WEBHOOK_IP_WHITELIST:}
+
+# Logging configuration
+logging:
+  level:
+    com.techbra: INFO
+    com.techbra.billing.payment: DEBUG
+    org.springframework.amqp: INFO
+    root: INFO
+  
+  # Mask sensitive payment data
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  health:
+    rabbit:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      service: billing
+
+# Application info
+info:
+  app:
+    name: ${spring.application.name}
+    description: Payment Processing and Billing Management Service
+    version: 1.0.0-SNAPSHOT
+  features:
+    - "Multi-gateway payment processing"
+    - "Invoice generation"
+    - "Tax calculation"
+    - "PCI compliance"
+    - "Refund management"
+    - "Brazilian PIX support"

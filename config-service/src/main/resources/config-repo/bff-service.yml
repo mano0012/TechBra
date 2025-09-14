@@ -1,0 +1,120 @@
+# TechBra BFF Service - Default Configuration
+# This configuration is shared across all environments unless overridden
+
+spring:
+  application:
+    name: bff-service
+  
+  # Security configuration
+  security:
+    jwt:
+      secret: ${JWT_SECRET:techbra-super-secret-key-for-jwt-tokens-2024}
+      expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days in milliseconds
+
+# External service URLs
+services:
+  customer:
+    url: ${CUSTOMER_SERVICE_URL:http://localhost:8081/api}
+    timeout: ${CUSTOMER_SERVICE_TIMEOUT:5000}
+    retry:
+      max-attempts: 3
+      delay: 1000
+  
+  product-catalog:
+    url: ${PRODUCT_CATALOG_SERVICE_URL:http://localhost:8082/api}
+    timeout: ${PRODUCT_CATALOG_SERVICE_TIMEOUT:5000}
+    retry:
+      max-attempts: 3
+      delay: 1000
+  
+  order:
+    url: ${ORDER_SERVICE_URL:http://localhost:8083/api}
+    timeout: ${ORDER_SERVICE_TIMEOUT:5000}
+    retry:
+      max-attempts: 3
+      delay: 1000
+  
+  billing:
+    url: ${BILLING_SERVICE_URL:http://localhost:8084/api}
+    timeout: ${BILLING_SERVICE_TIMEOUT:5000}
+    retry:
+      max-attempts: 3
+      delay: 1000
+
+# Circuit breaker configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      customer-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        wait-duration-in-open-state: 30s
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 2s
+      
+      product-catalog-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        wait-duration-in-open-state: 30s
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 2s
+  
+  retry:
+    instances:
+      customer-service:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+      
+      product-catalog-service:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+
+# Logging configuration
+logging:
+  level:
+    com.techbra: INFO
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    feign: DEBUG
+    root: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
+
+# Management and monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Application info
+info:
+  app:
+    name: ${spring.application.name}
+    description: Backend for Frontend - TechBra E-commerce Platform
+    version: 1.0.0-SNAPSHOT
+  build:
+    version: 1.0.0-SNAPSHOT
+    timestamp: ${build.timestamp:unknown}

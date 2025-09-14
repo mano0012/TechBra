@@ -1,0 +1,201 @@
+# TechBra BFF Service - Production Environment Configuration
+# Secure and optimized configuration for production deployment
+
+server:
+  port: 8080
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+    min-response-size: 1024
+  http2:
+    enabled: true
+
+spring:
+  # Production database configuration
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 20000
+      leak-detection-threshold: 60000
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        jdbc.batch_versioned_data: true
+
+# Production service URLs (internal cluster or load balancer)
+services:
+  customer:
+    url: ${CUSTOMER_SERVICE_URL:http://customer-service:8081/api}
+    timeout: ${CUSTOMER_SERVICE_TIMEOUT:3000}
+    retry:
+      max-attempts: 3
+      delay: 500
+  
+  product-catalog:
+    url: ${PRODUCT_CATALOG_SERVICE_URL:http://product-catalog-service:8082/api}
+    timeout: ${PRODUCT_CATALOG_SERVICE_TIMEOUT:3000}
+    retry:
+      max-attempts: 3
+      delay: 500
+  
+  order:
+    url: ${ORDER_SERVICE_URL:http://order-service:8083/api}
+    timeout: ${ORDER_SERVICE_TIMEOUT:5000}
+    retry:
+      max-attempts: 3
+      delay: 500
+  
+  billing:
+    url: ${BILLING_SERVICE_URL:http://billing-service:8084/api}
+    timeout: ${BILLING_SERVICE_TIMEOUT:5000}
+    retry:
+      max-attempts: 3
+      delay: 500
+
+# Production-tuned circuit breaker
+resilience4j:
+  circuitbreaker:
+    instances:
+      customer-service:
+        register-health-indicator: true
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        permitted-number-of-calls-in-half-open-state: 5
+        wait-duration-in-open-state: 60s
+        failure-rate-threshold: 30
+        slow-call-rate-threshold: 30
+        slow-call-duration-threshold: 1s
+      
+      product-catalog-service:
+        register-health-indicator: true
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        permitted-number-of-calls-in-half-open-state: 5
+        wait-duration-in-open-state: 60s
+        failure-rate-threshold: 30
+        slow-call-rate-threshold: 30
+        slow-call-duration-threshold: 1s
+  
+  retry:
+    instances:
+      customer-service:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+      
+      product-catalog-service:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+
+# Production logging - structured and minimal
+logging:
+  level:
+    com.techbra: INFO
+    org.springframework.security: WARN
+    org.springframework.web: WARN
+    feign: WARN
+    root: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+  file:
+    name: /var/log/bff-service/bff-service.log
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 3GB
+
+# Production management endpoints - restricted
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: when-authorized
+    info:
+      enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
+    diskspace:
+      enabled: true
+      threshold: 1GB
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: 30s
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+      slo:
+        http.server.requests: 10ms, 50ms, 100ms, 200ms, 500ms, 1s, 2s
+    tags:
+      application: ${spring.application.name}
+      environment: production
+
+# Production info
+info:
+  environment: production
+  features:
+    - "PostgreSQL database"
+    - "Production-tuned circuit breakers"
+    - "Structured logging with tracing"
+    - "Prometheus metrics"
+    - "HTTP/2 enabled"
+    - "Response compression"
+
+# Security configuration for production
+spring:
+  security:
+    jwt:
+      secret: ${JWT_SECRET} # Must be provided via environment
+      expiration: ${JWT_EXPIRATION:3600000} # 1 hour
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION:86400000} # 24 hours
+
+# Production-specific thread pool configuration
+spring:
+  task:
+    execution:
+      pool:
+        core-size: 8
+        max-size: 20
+        queue-capacity: 100
+        keep-alive: 60s
+    scheduling:
+      pool:
+        size: 5

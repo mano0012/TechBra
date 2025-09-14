@@ -1,0 +1,93 @@
+# TechBra BFF Service - Development Environment Configuration
+# Overrides and extends default configuration for local development
+
+server:
+  port: 8080
+
+spring:
+  # Development database configuration (if needed)
+  datasource:
+    url: ${DB_URL:jdbc:h2:mem:techbra-dev}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+    driver-class-name: org.h2.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# Development service URLs (local instances)
+services:
+  customer:
+    url: http://localhost:8081/api
+    timeout: 10000 # Longer timeout for development
+  
+  product-catalog:
+    url: http://localhost:8082/api
+    timeout: 10000
+  
+  order:
+    url: http://localhost:8083/api
+    timeout: 10000
+  
+  billing:
+    url: http://localhost:8084/api
+    timeout: 10000
+
+# Relaxed circuit breaker for development
+resilience4j:
+  circuitbreaker:
+    instances:
+      customer-service:
+        failure-rate-threshold: 80 # More lenient in dev
+        wait-duration-in-open-state: 10s # Shorter wait time
+      
+      product-catalog-service:
+        failure-rate-threshold: 80
+        wait-duration-in-open-state: 10s
+
+# Enhanced logging for development
+logging:
+  level:
+    com.techbra: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.cloud.openfeign: DEBUG
+    feign: DEBUG
+    org.apache.http: DEBUG
+    httpclient.wire: DEBUG
+    root: INFO
+  
+# Development-specific management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*" # Expose all endpoints in development
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+    configprops:
+      show-values: always
+    env:
+      show-values: always
+
+# Development info
+info:
+  environment: development
+  debug: true
+  features:
+    - "H2 Console available at /h2-console"
+    - "All actuator endpoints exposed"
+    - "Enhanced logging enabled"
+    - "Relaxed circuit breaker settings"

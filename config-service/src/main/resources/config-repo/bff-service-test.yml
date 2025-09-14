@@ -1,0 +1,123 @@
+# TechBra BFF Service - Test Environment Configuration
+# Configuration optimized for automated testing
+
+server:
+  port: 0 # Random port for parallel test execution
+
+spring:
+  # Test database configuration
+  datasource:
+    url: jdbc:h2:mem:techbra-test-${random.uuid}
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false # Reduce noise in test logs
+  
+  # Test profile specific settings
+  test:
+    database:
+      replace: none # Don't replace datasource in tests
+
+# Mock service URLs for testing
+services:
+  customer:
+    url: http://localhost:${wiremock.server.port:8081}/api
+    timeout: 2000 # Shorter timeout for tests
+    retry:
+      max-attempts: 1 # No retries in tests
+  
+  product-catalog:
+    url: http://localhost:${wiremock.server.port:8082}/api
+    timeout: 2000
+    retry:
+      max-attempts: 1
+  
+  order:
+    url: http://localhost:${wiremock.server.port:8083}/api
+    timeout: 2000
+    retry:
+      max-attempts: 1
+  
+  billing:
+    url: http://localhost:${wiremock.server.port:8084}/api
+    timeout: 2000
+    retry:
+      max-attempts: 1
+
+# Disabled circuit breaker for predictable test behavior
+resilience4j:
+  circuitbreaker:
+    instances:
+      customer-service:
+        register-health-indicator: false
+        sliding-window-size: 2
+        minimum-number-of-calls: 1
+        failure-rate-threshold: 100 # Never open in tests
+        wait-duration-in-open-state: 1s
+      
+      product-catalog-service:
+        register-health-indicator: false
+        sliding-window-size: 2
+        minimum-number-of-calls: 1
+        failure-rate-threshold: 100
+        wait-duration-in-open-state: 1s
+  
+  retry:
+    instances:
+      customer-service:
+        max-attempts: 1 # No retries in tests
+      
+      product-catalog-service:
+        max-attempts: 1
+
+# Minimal logging for tests
+logging:
+  level:
+    com.techbra: INFO
+    org.springframework: WARN
+    org.springframework.test: INFO
+    org.springframework.boot.test: INFO
+    org.testcontainers: INFO
+    com.github.tomakehurst.wiremock: WARN
+    root: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Test-specific management configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never # Reduce test output
+  health:
+    circuitbreakers:
+      enabled: false # Disable for tests
+  metrics:
+    export:
+      prometheus:
+        enabled: false # Disable metrics export in tests
+
+# Test environment info
+info:
+  environment: test
+  features:
+    - "In-memory H2 database"
+    - "WireMock for service mocking"
+    - "Disabled circuit breakers"
+    - "Minimal logging"
+    - "Random port assignment"
+
+# JWT configuration for tests
+spring:
+  security:
+    jwt:
+      secret: test-secret-key-for-jwt-tokens
+      expiration: 3600000 # 1 hour for tests
+      refresh-expiration: 7200000 # 2 hours for tests

@@ -1,0 +1,161 @@
+package com.techbra.config.health;
+
+import org.springframework.boot.actuator.health.Health;
+import org.springframework.boot.actuator.health.HealthIndicator;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Health indicator for Git repositories connectivity
+ * Checks if configured Git repositories are accessible
+ */
+@Component
+@ConfigurationProperties(prefix = "spring.cloud.config.server.git")
+public class GitRepositoryHealthIndicator implements HealthIndicator {
+
+    private static final Logger logger = LoggerFactory.getLogger(GitRepositoryHealthIndicator.class);
+    private static final int TIMEOUT_SECONDS = 10;
+
+    private String uri;
+    private List<Map<String, Object>> repos;
+
+    @Override
+    public Health health() {
+        Health.Builder healthBuilder = Health.up();
+        boolean allHealthy = true;
+
+        try {
+            // Check main repository if configured
+            if (uri != null && !uri.isEmpty()) {
+                boolean mainRepoHealthy = checkGitRepository("main", uri);
+                healthBuilder.withDetail("main-repository",
+                        mainRepoHealthy ? "accessible" : "inaccessible");
+                allHealthy = allHealthy && mainRepoHealthy;
+            }
+
+            // Check additional repositories if configured
+            if (repos != null && !repos.isEmpty()) {
+                for (int i = 0; i < repos.size(); i++) {
+                    Map<String, Object> repo = repos.get(i);
+                    String repoUri = (String) repo.get("uri");
+                    String repoName = (String) repo.getOrDefault("name", "repo-" + i);
+
+                    if (repoUri != null && !repoUri.isEmpty()) {
+                        boolean repoHealthy = checkGitRepository(repoName, repoUri);
+                        healthBuilder.withDetail(repoName + "-repository",
+                                repoHealthy ? "accessible" : "inaccessible");
+                        allHealthy = allHealthy && repoHealthy;
+                    }
+                }
+            }
+
+            // If no Git repositories are configured, consider it healthy (using native)
+            if ((uri == null || uri.isEmpty()) && (repos == null || repos.isEmpty())) {
+                healthBuilder.withDetail("repository-type", "native")
+                        .withDetail("status", "using-local-filesystem");
+            }
+
+            healthBuilder.withDetail("timestamp", System.currentTimeMillis());
+
+            return allHealthy ? healthBuilder.build() : healthBuilder.down().build();
+
+        } catch (Exception e) {
+            logger.error("Git repository health check failed", e);
+            return Health.down()
+                    .withDetail("error", e.getMessage())
+                    .withDetail("exception", e.getClass().getSimpleName())
+                    .withDetail("timestamp", System.currentTimeMillis())
+                    .build();
+        }
+    }
+
+    private boolean checkGitRepository(String name, String repoUri) {
+        try {
+            // For HTTP/HTTPS repositories, try to connect
+            if (repoUri.startsWith("http://") || repoUri.startsWith("https://")) {
+                return checkHttpRepository(name, repoUri);
+            }
+
+            // For SSH repositories, we can't easily check without credentials
+            // So we'll assume they're healthy if configured
+            if (repoUri.startsWith("git@") || repoUri.startsWith("ssh://")) {
+                logger.debug("SSH repository {} assumed healthy: {}", name, repoUri);
+                return true;
+            }
+
+            // For file:// repositories, check if path exists
+            if (repoUri.startsWith("file://")) {
+                String path = repoUri.substring(7);
+                boolean exists = new java.io.File(path).exists();
+                logger.debug("File repository {} health: {} (path: {})", name, exists, path);
+                return exists;
+            }
+
+            logger.warn("Unknown repository type for {}: {}", name, repoUri);
+            return true; // Assume healthy for unknown types
+
+        } catch (Exception e) {
+            logger.error("Failed to check repository {} ({}): {}", name, repoUri, e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean checkHttpRepository(String name, String repoUri) {
+        try {
+            CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    URL url = new URL(repoUri);
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("HEAD");
+                    connection.setConnectTimeout(5000);
+                    connection.setReadTimeout(5000);
+                    connection.setInstanceFollowRedirects(true);
+
+                    int responseCode = connection.getResponseCode();
+                    boolean healthy = responseCode >= 200 && responseCode < 400;
+
+                    logger.debug("HTTP repository {} health check: {} (response: {})",
+                            name, healthy, responseCode);
+
+                    return healthy;
+                } catch (IOException e) {
+                    logger.debug("HTTP repository {} connection failed: {}", name, e.getMessage());
+                    return false;
+                }
+            });
+
+            return future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        } catch (Exception e) {
+            logger.debug("HTTP repository {} health check timed out or failed: {}", name, e.getMessage());
+            return false;
+        }
+    }
+
+    // Getters and setters for configuration properties
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
+    }
+
+    public List<Map<String, Object>> getRepos() {
+        return repos;
+    }
+
+    public void setRepos(List<Map<String, Object>> repos) {
+        this.repos = repos;
+    }
+}
