@@ -9,7 +9,7 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>TechBra Config Service</name>
+    <name>Config Service</name>
     <description>Centralized configuration server for TechBra microservices platform</description>
 
     <properties>
@@ -21,6 +21,17 @@
         <junit.version>5.10.1</junit.version>
         <testcontainers.version>1.19.3</testcontainers.version>
         <jacoco.version>0.8.11</jacoco.version>
+        <!-- Propriedades do SonarQube -->
+        <sonar.host.url>http://localhost:9000</sonar.host.url>
+        <sonar.projectKey>config-server</sonar.projectKey>
+        <sonar.token>sqp_3a23fea54a282b16d7f3c5991743806019fa972d</sonar.token>
+        <sonar.sources>src/main/java</sonar.sources>
+        <sonar.tests>src/test/java</sonar.tests>
+        <sonar.java.binaries>target/classes</sonar.java.binaries>
+        <sonar.java.test.binaries>target/test-classes</sonar.java.test.binaries>
+        <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
+        <sonar.exclusions>**/*Application.java</sonar.exclusions>
     </properties>
 
     <dependencyManagement>
@@ -243,6 +254,12 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>3.10.0.2594</version>
             </plugin>
         </plugins>
     </build>

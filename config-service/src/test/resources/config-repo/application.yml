@@ -1,0 +1,13 @@
+# Test configuration file for Config Server tests
+
+test:
+  property: test-value
+  enabled: true
+
+spring:
+  application:
+    name: test-app
+
+logging:
+  level:
+    root: INFO

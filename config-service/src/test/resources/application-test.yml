@@ -1,0 +1,69 @@
+# TechBra Config Service - Test Configuration
+# Configuration optimized for running tests
+
+spring:
+  application:
+    name: config-service-test
+  
+  profiles:
+    active: native,test
+  
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/config-repo
+        git:
+          uri: file://./src/main/resources/config-repo
+          clone-on-start: false
+          timeout: 5
+        health:
+          enabled: true
+          repositories:
+            test-repo:
+              name: test
+              profiles: default
+              label: master
+
+server:
+  port: 0 # Random port for tests
+
+# Logging configuration for tests
+logging:
+  level:
+    com.techbra: DEBUG
+    org.springframework.cloud.config: DEBUG
+    org.springframework.boot.test: INFO
+    org.springframework.test: INFO
+    root: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Management endpoints for tests
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,configprops,env
+  endpoint:
+    health:
+      show-details: always
+  health:
+    config:
+      enabled: true
+
+# Test-specific info
+info:
+  environment: test
+  features:
+    - "Native configuration repository"
+    - "File-based Git repository"
+    - "Health checks enabled"
+    - "Debug logging"
+
+# Security disabled for tests
+  security:
+    user:
+      name: test
+      password: test
+      roles: USER

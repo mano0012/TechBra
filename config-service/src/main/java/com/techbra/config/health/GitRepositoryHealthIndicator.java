@@ -129,6 +129,10 @@ public class GitRepositoryHealthIndicator implements HealthIndicator {
             
             return future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
             
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warn("HTTP repository check interrupted: {} - {}", name, e.getMessage());
+            return false;
         } catch (Exception e) {
             logger.warn("Failed to check HTTP repository: {} - {}", name, e.getMessage());
             return false;
