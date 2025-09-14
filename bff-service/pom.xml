@@ -33,7 +33,7 @@
         <sonar.java.test.binaries>target/test-classes</sonar.java.test.binaries>
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         <sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
-        <sonar.exclusions>**/*Application.java,**/*Config.java,**/*Request.java,**/*Response.java,**/*Dto.java,**/*Controller.java,**/*Port.java</sonar.exclusions>
+        <sonar.exclusions>**/*Application.java,**/*Config.java,**/*Port.java</sonar.exclusions>
     </properties>
     
     <dependencies>

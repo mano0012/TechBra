@@ -104,15 +104,4 @@ class AuthenticationUseCaseImplTest {
         assertFalse(result);
         verify(authenticationPort).validateToken(invalidToken);
     }
-
-    /*
-     * @Test
-     * void logout_ShouldExecuteWithoutErrors() {
-     * // Given
-     * String token = "jwt-token-to-logout";
-     * 
-     * // When & Then
-     * assertDoesNotThrow(() -> authenticationUseCase.logout(token));
-     * }
-     */
 }

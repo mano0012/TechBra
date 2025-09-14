@@ -5,6 +5,6 @@ import com.techbra.bff.application.dto.LoginResponse;
 
 public interface AuthenticationUseCase {
     LoginResponse login(LoginRequest request);
+
     boolean validateToken(String token);
-    void logout(String token);
 }

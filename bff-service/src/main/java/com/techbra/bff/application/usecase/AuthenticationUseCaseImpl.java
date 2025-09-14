@@ -44,9 +44,4 @@ public class AuthenticationUseCaseImpl implements AuthenticationUseCase {
     public boolean validateToken(String token) {
         return authenticationPort.validateToken(token);
     }
-
-    @Override
-    public void logout(String token) {
-        // TODO: implementar cache de tokens e remover/invalidar o token
-    }
 }

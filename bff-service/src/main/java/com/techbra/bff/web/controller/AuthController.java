@@ -24,14 +24,4 @@ public class AuthController {
         LoginResponse response = authenticationUseCase.login(request);
         return ResponseEntity.ok(response);
     }
-
-    /*
-     * @PostMapping("/logout")
-     * public ResponseEntity<Void> logout(@RequestHeader("Authorization") String
-     * token) {
-     * String jwtToken = token.replace("Bearer ", "");
-     * authenticationUseCase.logout(jwtToken);
-     * return ResponseEntity.ok().build();
-     * }
-     */
 }
