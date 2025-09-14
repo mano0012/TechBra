@@ -14,7 +14,7 @@ public class AuthenticationUseCaseImpl implements AuthenticationUseCase {
 
     private final AuthenticationPort authenticationPort;
 
-    @Value("${jwt.expiration}")
+    @Value("${spring.security.jwt.expiration}")
     private long jwtExpiration;
 
     public AuthenticationUseCaseImpl(AuthenticationPort authenticationPort) {

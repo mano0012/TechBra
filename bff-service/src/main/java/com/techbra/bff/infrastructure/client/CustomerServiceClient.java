@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "customer-service", url = "${microservices.customer-service.url}")
+@FeignClient(name = "customer-service", url = "${services.customer.url}")
 public interface CustomerServiceClient {
 
     @PostMapping("/api/customers/authenticate")

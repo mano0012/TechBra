@@ -8,31 +8,15 @@ spring:
     name: bff-service
   profiles:
     active: local
+  config:
+    import: configserver:http://config-admin:config-secret@localhost:8888
 
-# Microservices URLs
-microservices:
-  customer-service:
-    url: http://localhost:8081
-  product-catalog-service:
-    url: http://localhost:8082
-  order-service:
-    url: http://localhost:8083
-  subscription-service:
-    url: http://localhost:8084
-  billing-service:
-    url: http://localhost:8085
-  notification-service:
-    url: http://localhost:8086
-
-# JWT Configuration
-jwt:
-  secret: 73I1ZPDeYqfdd1AHCAMIhiNOsvy36oaudNGiI+V3OM1f+N8JOe6dNBXQhxvsQXmy
-  expiration: 900000 # 15 minutes
-
-# Logging
-logging:
-  level:
-    com.techbra.bff: DEBUG
-    org.springframework.web: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh
+  endpoint:
+    health:
+      show-details: always

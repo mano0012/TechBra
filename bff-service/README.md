@@ -36,8 +36,8 @@ O serviço utiliza **Arquitetura Hexagonal** (Ports and Adapters) com as seguint
 - **Spring Boot 3.2+**
 - **Spring Security** - Autenticação JWT
 - **Spring Cloud OpenFeign** - Comunicação com microserviços
-
-- **Resilience4j** - Circuit Breaker e Retry
+- **Spring Cloud Config** - Cliente de configuração centralizada
+- **Resilience4j** - Circuit Breaker e padrões de resiliência
 - **JUnit 5** - Testes unitários
 - **Testcontainers** - Testes de integração
 - **Maven** - Gerenciamento de dependências
@@ -51,12 +51,15 @@ O serviço utiliza **Arquitetura Hexagonal** (Ports and Adapters) com as seguint
 
 ### Executar Localmente
 
-```bash
-# Clone o repositório
-git clone <repository-url>
-cd bff-service
+**⚠️ IMPORTANTE**: Execute o Config Service primeiro!
 
-# Executar com Maven
+```bash
+# 1. Inicie o Config Service (em outro terminal)
+cd ../config-service
+mvn spring-boot:run
+
+# 2. Aguarde o Config Service inicializar, então execute o BFF Service
+cd ../bff-service
 mvn spring-boot:run
 
 # Ou com Docker
@@ -70,6 +73,12 @@ docker run -p 8080:8080 bff-service
 # Health check
 curl http://localhost:8080/api/health
 
+# Config Server
+curl http://localhost:8888/actuator/health
+
+# Circuit Breaker Metrics
+curl http://localhost:8080/actuator/circuitbreakers
+
 # Autenticação
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
@@ -81,6 +90,8 @@ curl -X POST http://localhost:8080/api/auth/login \
 ### ✅ Implementadas
 - **Autenticação JWT** - Login e validação de tokens
 - **Gerenciamento de Produtos** - CRUD e busca de produtos
+- **Circuit Breaker** - Resilience4j para resiliência de microserviços
+- **Config Client** - Integração com Config Server para configurações centralizadas
 - **Health Check** - Monitoramento de saúde do serviço
 - **Exception Handling** - Tratamento global de erros
 - **Security Configuration** - Configuração de segurança
@@ -92,31 +103,54 @@ curl -X POST http://localhost:8080/api/auth/login \
 
 ## 🔧 Configuração
 
-### Variáveis de Ambiente
+### Configuração
+
+O BFF Service utiliza **Spring Cloud Config** para configuração centralizada. As configurações são carregadas do **Config Server** na inicialização.
+
+#### Config Server Integration
 
 ```yaml
 # application.yml
-server:
-  port: 8080
-  servlet:
-    context-path: /api
-
 spring:
-  profiles:
-    active: dev
   application:
     name: bff-service
-
-jwt:
-  secret: ${JWT_SECRET:your-super-secret-key-here}
-  expiration: ${JWT_EXPIRATION:86400000}
-
-microservices:
-  customer-service:
-    url: ${CUSTOMER_SERVICE_URL:http://localhost:8081/api}
-  product-catalog-service:
-    url: ${PRODUCT_CATALOG_SERVICE_URL:http://localhost:8082/api}
+  config:
+    import: "configserver:http://localhost:8888"
+  cloud:
+    config:
+      uri: http://localhost:8888
+      fail-fast: true
+      retry:
+        initial-interval: 1000
+        max-attempts: 6
 ```
+
+#### Circuit Breaker Configuration
+
+```yaml
+# Configurado via Config Server (bff-service.yml)
+resilience4j:
+  circuitbreaker:
+    instances:
+      customer-service:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+      product-catalog-service:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+```
+
+#### Principais Configurações
+
+- **Services URLs**: Configuradas via Config Server
+- **JWT Settings**: Secret e expiration centralizados
+- **Circuit Breaker**: Resilience4j com configuração por serviço
+- **Logging**: Níveis configuráveis por ambiente
+- **Management**: Actuator endpoints para monitoramento
 
 ## 🧪 Testes
 

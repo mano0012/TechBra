@@ -1,0 +1,42 @@
+# Bootstrap configuration for BFF Service
+# This file is loaded before application.yml and is used for Spring Cloud Config
+
+spring:
+  application:
+    name: bff-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  config:
+    import: configserver:${CONFIG_SERVER_URI:http://localhost:8888}
+  cloud:
+    config:
+      uri: ${CONFIG_SERVER_URI:http://localhost:8888}
+      username: ${CONFIG_USERNAME:config-admin}
+      password: ${CONFIG_PASSWORD:config-secret}
+      fail-fast: true
+      retry:
+        initial-interval: 1000
+        max-attempts: 6
+        max-interval: 2000
+        multiplier: 1.1
+      request-connect-timeout: 5000
+      request-read-timeout: 10000
+
+# Management endpoints for health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging configuration
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
+    org.springframework.web.client: DEBUG
+    com.techbra: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"

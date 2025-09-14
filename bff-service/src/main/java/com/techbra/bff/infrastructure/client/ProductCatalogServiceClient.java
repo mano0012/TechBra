@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name = "product-catalog-service", url = "${microservices.product-catalog-service.url}")
+@FeignClient(name = "product-catalog-service", url = "${services.product-catalog.url}")
 public interface ProductCatalogServiceClient {
     
     @GetMapping("/api/products")
