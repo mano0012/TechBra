@@ -70,60 +70,12 @@ O sistema é composto por múltiplos microserviços independentes, cada um respo
 - **SonarQube** - Análise de qualidade
 
 ### DevOps e Infraestrutura
-- **Docker** - Containerização
-- **Kubernetes** - Orquestração
-- **GitHub Actions** - CI/CD
-- **Prometheus** - Monitoramento
-- **Grafana** - Dashboards
-- **ELK Stack** - Logs centralizados
-
-## 🚀 Como Começar
-
-### Pré-requisitos
-
-- **Java 17+**
-- **Maven 3.6+**
-- **Docker** e **Docker Compose**
-- **Git**
-
-### 1. Clone o Repositório
-
-```bash
-git clone https://github.com/techbra/ecommerce-platform.git
-cd ecommerce-platform
-```
-
-### 2. Executar o BFF Service
-
-Por enquanto, apenas o **BFF Service** está implementado:
-
-```bash
-# Navegar para o BFF Service
-cd bff-service
-
-# Executar com Maven
-mvn spring-boot:run
-
-# Ou com Docker
-docker build -t bff-service .
-docker run -p 8080:8080 bff-service
-```
-
-### 3. Verificar Funcionamento
-
-```bash
-# Health check do BFF Service
-curl http://localhost:8080/api/health
-
-# Testar autenticação
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin"}'
-
-# Listar produtos (com token JWT)
-curl http://localhost:8080/api/products \
-  -H "Authorization: Bearer {jwt-token}"
-```
+- ✅ **Docker** - Containerização
+- 🚧 **Kubernetes** - Orquestração
+- 🚧 **GitHub Actions** - CI/CD
+- 🚧 **Prometheus** - Monitoramento
+- 🚧 **Grafana** - Dashboards
+- 🚧 **ELK Stack** - Logs centralizados
 
 ## 📊 Status do Projeto
 
@@ -171,28 +123,6 @@ A documentação dos demais microserviços será criada conforme forem implement
 - **Subscription Service** - Em planejamento
 - **Config Service** - Em planejamento
 
-## 🔧 Configuração
-
-### Variáveis de Ambiente
-
-```bash
-# Configurações principais
-export SPRING_PROFILES_ACTIVE=dev
-export JWT_SECRET=your-super-secret-key
-
-# URLs dos microserviços (quando implementados)
-export CUSTOMER_SERVICE_URL=http://localhost:8081/api
-export PRODUCT_CATALOG_SERVICE_URL=http://localhost:8082/api
-export ORDER_SERVICE_URL=http://localhost:8083/api
-```
-
-### Profiles Disponíveis
-
-- `dev` - Desenvolvimento local
-- `test` - Ambiente de testes
-- `staging` - Homologação
-- `prod` - Produção
-
 ## 🧪 Testes
 
 ### BFF Service
@@ -234,20 +164,6 @@ mvn jacoco:report
 3. **Fase 3** 🚧 - Product Catalog Service (Em planejamento)
 4. **Fase 4** 🚧 - Order Service (Em planejamento)
 5. **Fase 5** 🚧 - Demais microserviços
-
-## 📞 Suporte
-
-### Contatos
-
-- **Tech Lead**: [tech-lead@techbra.com](mailto:tech-lead@techbra.com)
-- **DevOps**: [devops@techbra.com](mailto:devops@techbra.com)
-- **Suporte**: [suporte@techbra.com](mailto:suporte@techbra.com)
-
-### Links Úteis
-
-- **Jira**: [Backlog do Projeto](https://techbra.atlassian.net)
-- **Confluence**: [Documentação](https://techbra.atlassian.net/wiki)
-- **Slack**: [#techbra-dev](https://techbra.slack.com/channels/techbra-dev)
 
 ## 📄 Licença
 
