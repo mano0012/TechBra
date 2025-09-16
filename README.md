@@ -38,12 +38,12 @@ O sistema é composto por múltiplos microserviços independentes, cada um respo
 |---------|-------|--------|-----------|-------------|
 | **BFF Service** | 8080 | ✅ **Implementado** | Backend for Frontend - Orquestra chamadas para microserviços | [📖 README](bff-service/README.md) |
 | **Config Service** | 8888 | ✅ **Implementado** | Servidor de configuração centralizada para todos os microserviços | [📖 README](config-service/README.md) |
+| **Customer Service** | 8081 | ✅ **Implementado** | Gerenciamento de usuários, autenticação e perfis de clientes | [📖 README](customer-service/README.md) |
 
 ### 🚧 Serviços Planejados
 
 | Serviço | Porta | Status | Descrição |
 |---------|-------|--------|-----------|
-| **Customer Service** | 8081 | 🚧 Planejado | Gerenciamento de clientes e autenticação |
 | **Product Catalog Service** | 8082 | 🚧 Planejado | Catálogo de produtos e categorias |
 | **Order Service** | 8083 | 🚧 Planejado | Processamento de pedidos |
 | **Billing Service** | 8084 | 🚧 Planejado | Faturamento e pagamentos |
@@ -104,9 +104,20 @@ O sistema é composto por múltiplos microserviços independentes, cada um respo
 - ✅ **Containerização** - Docker pronto para produção
 - 🚧 **Testes Completos** - Testes unitários e de integração
 
+#### Customer Service
+- ✅ **Gerenciamento de Usuários** - CRUD completo de usuários com validações
+- ✅ **Autenticação** - Sistema de login com validação de credenciais
+- ✅ **Clean Architecture** - Arquitetura hexagonal com DDD
+- ✅ **Spring Cloud Config** - Integração com configuração centralizada
+- ✅ **Persistência JPA** - PostgreSQL com Flyway para migrações
+- ✅ **Segurança** - Hash de senhas com BCrypt e controle de acesso
+- ✅ **Containerização** - Docker e Docker Compose configurados
+- ✅ **Testes Completos** - Testes unitários, integração e repositório
+- ✅ **Health Checks** - Monitoramento via Spring Boot Actuator
+- ✅ **Profiles Múltiplos** - Configurações para dev, test e produção
+
 ### 🚧 Em Desenvolvimento
 
-- 🚧 **Customer Service** - Microserviço de clientes
 - 🚧 **Product Catalog Service** - Microserviço de catálogo
 - 🚧 **Order Service** - Microserviço de pedidos
 - 🚧 **Outros microserviços** - Conforme roadmap
@@ -139,11 +150,26 @@ Documentação detalhada disponível:
 - **Containerização** - Docker e scripts de deploy automatizados
 - **Testes** - Cobertura completa com testes unitários e de integração
 
+### 👥 Customer Service (Implementado)
+
+Para documentação completa do Customer Service, consulte:
+
+**📖 [Customer Service README](customer-service/README.md)**
+
+Documentação detalhada disponível:
+- **Arquitetura Clean** - DDD com separação clara de responsabilidades
+- **Gerenciamento de Usuários** - Cadastro, autenticação e perfis
+- **Spring Cloud Config** - Configuração centralizada e profiles
+- **Persistência** - PostgreSQL com JPA e Flyway
+- **Segurança** - BCrypt e controle de acesso
+- **Containerização** - Docker Compose para desenvolvimento
+- **Testes** - Cobertura completa unitária e integração
+- **Monitoramento** - Health checks e métricas
+
 ### 🚧 Outros Serviços (Planejados)
 
 A documentação dos demais microserviços será criada conforme forem implementados:
 
-- **Customer Service** - Em planejamento
 - **Product Catalog Service** - Em planejamento
 - **Order Service** - Em planejamento
 - **Billing Service** - Em planejamento
@@ -175,7 +201,14 @@ A documentação dos demais microserviços será criada conforme forem implement
    mvn spring-boot:run
    ```
    
-   **Segundo: BFF Service**
+   **Segundo: Customer Service (opcional)**
+   ```bash
+   cd ../customer-service
+   # Certifique-se que PostgreSQL está rodando
+   mvn spring-boot:run -Dspring-boot.run.profiles=dev
+   ```
+   
+   **Terceiro: BFF Service**
    ```bash
    cd ../bff-service
    mvn spring-boot:run
@@ -183,15 +216,17 @@ A documentação dos demais microserviços será criada conforme forem implement
 
 3. **Verifique se os serviços estão funcionando**
    - Config Service: http://localhost:8888/actuator/health
+   - Customer Service: http://localhost:8081/actuator/health
    - BFF Service: http://localhost:8080/api/health
    - Circuit Breaker Metrics: http://localhost:8080/actuator/circuitbreakers
 
 ### ⚠️ Ordem de Inicialização
 
-**IMPORTANTE**: O Config Service deve ser iniciado **ANTES** do BFF Service, pois:
-- O BFF Service depende das configurações centralizadas
-- Sem o Config Server, o BFF Service falhará na inicialização
-- As configurações de Circuit Breaker são carregadas do Config Server
+**IMPORTANTE**: O Config Service deve ser iniciado **ANTES** dos demais serviços, pois:
+- Todos os microserviços dependem das configurações centralizadas
+- Sem o Config Server, os serviços falharão na inicialização
+- As configurações específicas de cada ambiente são carregadas do Config Server
+- O Customer Service requer PostgreSQL rodando localmente ou via Docker
 
 ## 🧪 Testes
 
@@ -226,6 +261,25 @@ mvn test
 .\build-and-deploy.ps1 -Environment dev
 ```
 
+### Customer Service
+
+```bash
+cd customer-service
+
+# Testes unitários
+mvn test
+
+# Testes de integração
+mvn verify -P integration-tests
+
+# Build com Docker
+mvn clean package -DskipTests
+docker-compose up --build customer-service
+
+# Cobertura de código
+mvn jacoco:report
+```
+
 ## 🤝 Contribuição
 
 ### Como Contribuir
@@ -247,7 +301,7 @@ mvn test
 
 1. **Fase 1** ✅ - BFF Service (Concluído)
 2. **Fase 2** ✅ - Config Service (Concluído)
-3. **Fase 3** 🚧 - Customer Service (Em planejamento)
+3. **Fase 3** ✅ - Customer Service (Concluído)
 4. **Fase 4** 🚧 - Product Catalog Service (Em planejamento)
 5. **Fase 5** 🚧 - Order Service (Em planejamento)
 6. **Fase 6** 🚧 - Demais microserviços
@@ -266,9 +320,9 @@ Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) par
 ![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=techbra_ecommerce-platform&metric=security_rating)
 
 **Versão Atual**: 1.0.0-SNAPSHOT  
-**Última Atualização**: Janeiro 2024  
+**Última Atualização**: Setembro 2025  
 **Status**: 🚧 Em Desenvolvimento Ativo  
-**Serviços Implementados**: 2/8 (BFF Service, Config Service)
+**Serviços Implementados**: 3/8 (BFF Service, Config Service, Customer Service)
 
 ---
 
