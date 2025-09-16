@@ -28,6 +28,7 @@
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         <sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
         <sonar.exclusions>**/*Application.java,**/*Config.java,**/*Port.java</sonar.exclusions>
+        <sonar.cpd.exclusions>**/integration/**/*Test.java,**/domain/User.java,**/persistence/UserEntity.java</sonar.cpd.exclusions>
     </properties>
 
     <dependencyManagement>
