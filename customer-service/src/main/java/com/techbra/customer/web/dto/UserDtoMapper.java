@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class UserDtoMapper {
-    
+
     /**
      * Converte User (domínio) para UserResponse (DTO)
      */
@@ -16,24 +16,15 @@ public class UserDtoMapper {
         if (user == null) {
             return null;
         }
-        
+
         return new UserResponse(
-            user.getId(),
-            user.getUsername(),
-            user.getEmail(),
-            user.getFirstName(),
-            user.getLastName(),
-            user.isActive(),
-            user.getCreatedAt(),
-            user.getUpdatedAt()
-        );
-    }
-    
-    /**
-     * Cria AuthResponse com token e dados do usuário
-     */
-    public AuthResponse toAuthResponse(String token, User user) {
-        UserResponse userResponse = toResponse(user);
-        return new AuthResponse(token, userResponse);
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.isActive(),
+                user.getCreatedAt(),
+                user.getUpdatedAt());
     }
 }

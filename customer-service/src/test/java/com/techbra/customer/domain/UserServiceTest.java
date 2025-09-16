@@ -3,18 +3,20 @@ package com.techbra.customer.domain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 /**
@@ -119,12 +121,12 @@ class UserServiceTest {
         verify(userRepository, never()).save(any(User.class));
     }
     
-    @Test
-    void createUser_WithInvalidPassword_ShouldThrowException() {
+    @ParameterizedTest
+    @MethodSource("invalidPasswordProvider")
+    void createUser_WithInvalidPassword_ShouldThrowException(String rawPassword, String expectedMessage) {
         // Given
         String username = "testuser";
         String email = "test@example.com";
-        String rawPassword = "123"; // Senha muito curta
         String firstName = "Test";
         String lastName = "User";
         
@@ -137,11 +139,19 @@ class UserServiceTest {
             () -> userService.createUser(username, email, rawPassword, firstName, lastName)
         );
         
-        assertEquals("Senha deve ter pelo menos 6 caracteres", exception.getMessage());
+        assertEquals(expectedMessage, exception.getMessage());
         verify(userRepository).existsByUsername(username);
         verify(userRepository).existsByEmail(email);
         verify(passwordEncoder, never()).encode(anyString());
         verify(userRepository, never()).save(any(User.class));
+    }
+    
+    static Stream<Arguments> invalidPasswordProvider() {
+        return Stream.of(
+            Arguments.of("123", "Senha deve ter pelo menos 6 caracteres"),
+            Arguments.of(null, "Senha não pode ser vazia"),
+            Arguments.of("   ", "Senha não pode ser vazia")
+        );
     }
     
     @Test
@@ -461,55 +471,7 @@ class UserServiceTest {
         verify(userRepository).save(any(User.class));
     }
     
-    @Test
-    void createUser_WithNullPassword_ShouldThrowException() {
-        // Given
-        String username = "testuser";
-        String email = "test@example.com";
-        String rawPassword = null;
-        String firstName = "Test";
-        String lastName = "User";
-        
-        when(userRepository.existsByUsername(username)).thenReturn(false);
-        when(userRepository.existsByEmail(email)).thenReturn(false);
-        
-        // When & Then
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> userService.createUser(username, email, rawPassword, firstName, lastName)
-        );
-        
-        assertEquals("Senha não pode ser vazia", exception.getMessage());
-        verify(userRepository).existsByUsername(username);
-        verify(userRepository).existsByEmail(email);
-        verify(passwordEncoder, never()).encode(anyString());
-        verify(userRepository, never()).save(any(User.class));
-    }
-    
-    @Test
-    void createUser_WithEmptyPassword_ShouldThrowException() {
-        // Given
-        String username = "testuser";
-        String email = "test@example.com";
-        String rawPassword = "   "; // Senha vazia com espaços
-        String firstName = "Test";
-        String lastName = "User";
-        
-        when(userRepository.existsByUsername(username)).thenReturn(false);
-        when(userRepository.existsByEmail(email)).thenReturn(false);
-        
-        // When & Then
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> userService.createUser(username, email, rawPassword, firstName, lastName)
-        );
-        
-        assertEquals("Senha não pode ser vazia", exception.getMessage());
-        verify(userRepository).existsByUsername(username);
-        verify(userRepository).existsByEmail(email);
-        verify(passwordEncoder, never()).encode(anyString());
-        verify(userRepository, never()).save(any(User.class));
-    }
+
     
     @Test
     void createUser_WithTooLongPassword_ShouldThrowException() {

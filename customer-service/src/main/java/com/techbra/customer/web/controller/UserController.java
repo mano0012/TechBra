@@ -44,6 +44,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
             
         } catch (IllegalArgumentException e) {
+            // Verificar se é erro de duplicação para retornar status correto
+            if (e.getMessage().contains("já existe")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Erro no cadastro: " + e.getMessage());
+            }
             return ResponseEntity.badRequest().body("Erro no cadastro: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -81,12 +85,10 @@ public class UserController {
     public ResponseEntity<?> getUserByUsername(@PathVariable String username) {
         try {
             User user = userApplicationService.findByUsername(username);
-            if (user != null) {
-                UserResponse userResponse = userDtoMapper.toResponse(user);
-                return ResponseEntity.ok(userResponse);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
+            UserResponse userResponse = userDtoMapper.toResponse(user);
+            return ResponseEntity.ok(userResponse);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erro interno do servidor");
