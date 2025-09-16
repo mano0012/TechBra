@@ -6,7 +6,7 @@ services:
     container_name: customer_postgres
     environment:
       POSTGRES_DB: techbra_customers
-      POSTGRES_USER: postgres
+      POSTGRES_USER: techbra_customer_admin
       POSTGRES_PASSWORD: $=[1d"91Edzu
     ports:
       - "5432:5432"
