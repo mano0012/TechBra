@@ -89,14 +89,47 @@ src/main/resources/config-repo/
 ├── bff-service-prod.yml              # Configurações de produção
 ├── customer-service.yml              # Configurações do serviço de clientes
 ├── product-catalog-service.yml       # Configurações do catálogo
-├── order-service.yml                 # Configurações de pedidos
+├── order-service-dev.yml             # Configurações de desenvolvimento - pedidos
+├── order-service-test.yml            # Configurações de teste - pedidos
+├── order-service-prod.yml            # Configurações de produção - pedidos
 └── billing-service.yml               # Configurações de cobrança
 ```
 
 ### Padrão de Nomenclatura
 
-- `{service-name}.yml`: Configurações padrão
+- `{service-name}.yml`: Configurações padrão com variáveis de ambiente
 - `{service-name}-{profile}.yml`: Configurações específicas do ambiente
+
+### Configurações por Ambiente
+
+O order-service possui configurações específicas para cada ambiente:
+
+- **order-service-dev.yml**: Configurações específicas para desenvolvimento
+- **order-service-test.yml**: Configurações específicas para testes
+- **order-service-prod.yml**: Configurações específicas para produção
+
+Cada ambiente possui suas próprias configurações independentes, sem arquivo padrão compartilhado.
+
+#### Desenvolvimento (dev)
+- Logs detalhados (DEBUG/TRACE)
+- Banco de dados local
+- Configurações relaxadas de segurança
+- Endpoints de management expostos
+- Configurações otimizadas para desenvolvimento
+
+#### Teste (test)
+- Banco de dados em memória (H2)
+- Logs minimalistas
+- Flyway desabilitado
+- RabbitMQ embutido
+- Configurações otimizadas para testes automatizados
+
+#### Produção (prod)
+- Logs otimizados (WARN/ERROR)
+- Configurações de segurança rigorosas
+- Pool de conexões otimizado
+- Configurações de performance
+- Monitoramento completo habilitado
 
 ## 🔧 Configuração
 
@@ -312,6 +345,11 @@ config-service/
 
 ## 📚 Documentação Adicional
 
+### Documentação Interna
+- [Configurações por Ambiente](docs/CONFIGURATION_ENVIRONMENTS.md) - Guia detalhado sobre estrutura de configurações
+- [Order Service README](../order-service/README.md) - Documentação do serviço de pedidos
+
+### Documentação Externa
 - [Spring Cloud Config Documentation](https://spring.io/projects/spring-cloud-config)
 - [Spring Boot Actuator](https://spring.io/guides/gs/actuator-service/)
 - [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/)

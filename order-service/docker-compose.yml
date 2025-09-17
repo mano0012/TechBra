@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  postgres-order:
+    image: postgres:17
+    container_name: order_postgres
+    environment:
+      POSTGRES_DB: techbra_orders
+      POSTGRES_USER: techbra_orders_admin
+      POSTGRES_PASSWORD: $=[1d"91Edzu
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    networks:
+      - order-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_order_data:
+    driver: local
+
+networks:
+  order-network:
+    driver: bridge

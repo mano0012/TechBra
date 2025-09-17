@@ -1,0 +1,238 @@
+# TechBra Order Service - Test Configuration
+# Microservice responsible for order management and processing - TEST Environment
+
+spring:
+  application:
+    name: order-service
+  
+  # Database configuration - Test (H2 in-memory)
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+    hikari:
+      connection-timeout: 5000
+      maximum-pool-size: 5
+      minimum-idle: 1
+      idle-timeout: 60000
+      max-lifetime: 300000
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: ${SHOW_SQL:true}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+    defer-datasource-initialization: true
+  
+  flyway:
+    enabled: false
+  
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:test-data.sql
+  
+  # Message broker configuration - Test (Embedded)
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/test}
+
+server:
+  port: 0 # Random port for tests
+
+# External service integrations - Test (Mock URLs)
+services:
+  customer:
+    url: ${CUSTOMER_SERVICE_URL:http://localhost:8081/api}
+    timeout: ${CUSTOMER_SERVICE_TIMEOUT:1000}
+  
+  product-catalog:
+    url: ${PRODUCT_CATALOG_SERVICE_URL:http://localhost:8082/api}
+    timeout: ${PRODUCT_CATALOG_SERVICE_TIMEOUT:1000}
+  
+  billing:
+    url: ${BILLING_SERVICE_URL:http://localhost:8084/api}
+    timeout: ${BILLING_SERVICE_TIMEOUT:2000}
+  
+  inventory:
+    url: ${INVENTORY_SERVICE_URL:http://localhost:8087/api}
+    timeout: ${INVENTORY_SERVICE_TIMEOUT:1000}
+  
+  notification:
+    url: ${NOTIFICATION_SERVICE_URL:http://localhost:8086/api}
+    timeout: ${NOTIFICATION_SERVICE_TIMEOUT:1000}
+  
+  config:
+    url: ${CONFIG_SERVICE_URL:http://localhost:8888}
+
+# Order service specific configuration - Test
+order:
+  processing:
+    timeout: 5000 # 5 seconds (fast for tests)
+    max-items-per-order: 10
+    auto-cancel-timeout: 30000 # 30 seconds
+  
+  payment:
+    timeout: 2000 # 2 seconds
+    retry-attempts: 1
+  
+  inventory:
+    reservation-timeout: 10000 # 10 seconds
+    auto-release: true
+  
+  status:
+    transitions:
+      pending-to-confirmed: 1000 # 1 second
+      confirmed-to-processing: 500 # 0.5 seconds
+      processing-to-shipped: 2000 # 2 seconds
+
+# Application specific properties - Test
+app:
+  order:
+    max-items-per-order: ${MAX_ITEMS_PER_ORDER:10}
+    default-timeout: ${DEFAULT_TIMEOUT:5000}
+    enable-notifications: ${ENABLE_NOTIFICATIONS:false}
+
+# Circuit breaker configuration - Test (disabled/lenient)
+resilience4j:
+  circuitbreaker:
+    instances:
+      customer-service:
+        register-health-indicator: false
+        sliding-window-size: 5
+        minimum-number-of-calls: 2
+        failure-rate-threshold: 90
+        wait-duration-in-open-state: 1s
+      
+      product-catalog-service:
+        register-health-indicator: false
+        sliding-window-size: 5
+        minimum-number-of-calls: 2
+        failure-rate-threshold: 90
+        wait-duration-in-open-state: 1s
+      
+      billing-service:
+        register-health-indicator: false
+        sliding-window-size: 5
+        minimum-number-of-calls: 2
+        failure-rate-threshold: 90
+        wait-duration-in-open-state: 1s
+      
+      inventory-service:
+        register-health-indicator: false
+        sliding-window-size: 5
+        minimum-number-of-calls: 2
+        failure-rate-threshold: 90
+        wait-duration-in-open-state: 1s
+  
+  retry:
+    instances:
+      billing-service:
+        max-attempts: 1
+        wait-duration: 100ms
+        enable-exponential-backoff: false
+      
+      inventory-service:
+        max-attempts: 1
+        wait-duration: 100ms
+        enable-exponential-backoff: false
+
+# Message queues configuration - Test
+rabbitmq:
+  exchanges:
+    order-events: order.events.test
+    order-dlx: order.dlx.test
+  
+  queues:
+    order-created: order.created.test
+    order-updated: order.updated.test
+    order-cancelled: order.cancelled.test
+    payment-processed: payment.processed.test
+    inventory-reserved: inventory.reserved.test
+    inventory-released: inventory.released.test
+  
+  routing-keys:
+    order-created: order.created.test
+    order-confirmed: order.confirmed.test
+    order-cancelled: order.cancelled.test
+    payment-success: payment.success.test
+    payment-failed: payment.failed.test
+
+# Logging configuration - Test (minimal)
+logging:
+  level:
+    com.techbra.order: ${LOG_LEVEL:DEBUG}
+    org.springframework.web: ${WEB_LOG_LEVEL:WARN}
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:DEBUG}
+    org.springframework.amqp: WARN
+    org.springframework.test: INFO
+    org.testcontainers: INFO
+    root: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: target/test-logs/order-service-test.log
+
+# Management endpoints - Test (all exposed for testing)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+  health:
+    db:
+      enabled: true
+    rabbit:
+      enabled: false # Disable for unit tests
+  metrics:
+    export:
+      prometheus:
+        enabled: false # Disable for tests
+
+# Test specific configuration
+test:
+  containers:
+    postgresql:
+      enabled: false # Use H2 by default
+    rabbitmq:
+      enabled: false # Use embedded/mock by default
+  
+  data:
+    cleanup: true
+    seed: true
+  
+  performance:
+    timeout-multiplier: 0.1 # Make timeouts 10x faster for tests
+
+# Application info - Test
+info:
+  app:
+    name: ${spring.application.name}
+    description: Order Management and Processing Service - Test Environment
+    version: 1.0.0-SNAPSHOT
+    environment: test
+  features:
+    - "Order lifecycle management"
+    - "Payment integration"
+    - "Inventory reservation"
+    - "Event-driven architecture"
+    - "In-memory database"
+    - "Fast test execution"
+    - "Mock integrations"

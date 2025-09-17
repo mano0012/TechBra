@@ -1,0 +1,214 @@
+# TechBra Order Service - Development Configuration
+# Microservice responsible for order management and processing - DEV Environment
+
+spring:
+  application:
+    name: order-service
+  
+  # Database configuration - Development
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:techbra_orders_dev}
+    username: ${DB_USERNAME:techbra_orders_dev}
+    password: ${DB_PASSWORD:dev123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 5
+      minimum-idle: 2
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: ${SHOW_SQL:true}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+  
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: false
+  
+  # Message broker configuration (RabbitMQ) - Development
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/dev}
+
+server:
+  port: 8083
+
+# External service integrations - Development
+services:
+  customer:
+    url: ${CUSTOMER_SERVICE_URL:http://localhost:8081/api}
+    timeout: ${CUSTOMER_SERVICE_TIMEOUT:5000}
+  
+  product-catalog:
+    url: ${PRODUCT_CATALOG_SERVICE_URL:http://localhost:8082/api}
+    timeout: ${PRODUCT_CATALOG_SERVICE_TIMEOUT:5000}
+  
+  billing:
+    url: ${BILLING_SERVICE_URL:http://localhost:8084/api}
+    timeout: ${BILLING_SERVICE_TIMEOUT:10000}
+  
+  inventory:
+    url: ${INVENTORY_SERVICE_URL:http://localhost:8087/api}
+    timeout: ${INVENTORY_SERVICE_TIMEOUT:5000}
+  
+  notification:
+    url: ${NOTIFICATION_SERVICE_URL:http://localhost:8086/api}
+    timeout: ${NOTIFICATION_SERVICE_TIMEOUT:5000}
+  
+  config:
+    url: ${CONFIG_SERVICE_URL:http://localhost:8888}
+
+# Order service specific configuration - Development
+order:
+  processing:
+    timeout: 600000 # 10 minutes (longer for dev)
+    max-items-per-order: 100
+    auto-cancel-timeout: 3600000 # 60 minutes
+  
+  payment:
+    timeout: 120000 # 2 minutes
+    retry-attempts: 5
+  
+  inventory:
+    reservation-timeout: 1200000 # 20 minutes
+    auto-release: true
+  
+  status:
+    transitions:
+      pending-to-confirmed: 600000 # 10 minutes
+      confirmed-to-processing: 120000 # 2 minutes
+      processing-to-shipped: 172800000 # 48 hours
+
+# Application specific properties - Development
+app:
+  order:
+    max-items-per-order: ${MAX_ITEMS_PER_ORDER:100}
+    default-timeout: ${DEFAULT_TIMEOUT:60000}
+    enable-notifications: ${ENABLE_NOTIFICATIONS:true}
+
+# Circuit breaker configuration - Development (more lenient)
+resilience4j:
+  circuitbreaker:
+    instances:
+      customer-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 3
+        failure-rate-threshold: 70
+        wait-duration-in-open-state: 15s
+      
+      product-catalog-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 3
+        failure-rate-threshold: 70
+        wait-duration-in-open-state: 15s
+      
+      billing-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 3
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 30s
+      
+      inventory-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 3
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 15s
+  
+  retry:
+    instances:
+      billing-service:
+        max-attempts: 5
+        wait-duration: 2000ms
+        enable-exponential-backoff: true
+      
+      inventory-service:
+        max-attempts: 3
+        wait-duration: 1000ms
+
+# Message queues configuration - Development
+rabbitmq:
+  exchanges:
+    order-events: order.events.dev
+    order-dlx: order.dlx.dev
+  
+  queues:
+    order-created: order.created.dev
+    order-updated: order.updated.dev
+    order-cancelled: order.cancelled.dev
+    payment-processed: payment.processed.dev
+    inventory-reserved: inventory.reserved.dev
+    inventory-released: inventory.released.dev
+  
+  routing-keys:
+    order-created: order.created.dev
+    order-confirmed: order.confirmed.dev
+    order-cancelled: order.cancelled.dev
+    payment-success: payment.success.dev
+    payment-failed: payment.failed.dev
+
+# Logging configuration - Development (verbose)
+logging:
+  level:
+    com.techbra.order: ${LOG_LEVEL:DEBUG}
+    org.springframework.web: ${WEB_LOG_LEVEL:DEBUG}
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:DEBUG}
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.amqp: DEBUG
+    root: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/order-service-dev.log
+
+# Management endpoints - Development (all exposed)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+  health:
+    db:
+      enabled: true
+    rabbit:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Application info - Development
+info:
+  app:
+    name: ${spring.application.name}
+    description: Order Management and Processing Service - Development
+    version: 1.0.0-SNAPSHOT
+    environment: development
+  features:
+    - "Order lifecycle management"
+    - "Payment integration"
+    - "Inventory reservation"
+    - "Event-driven architecture"
+    - "RabbitMQ messaging"
+    - "Development debugging enabled"

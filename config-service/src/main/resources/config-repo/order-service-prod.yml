@@ -1,0 +1,245 @@
+# TechBra Order Service - Production Configuration
+# Microservice responsible for order management and processing - PROD Environment
+
+spring:
+  application:
+    name: order-service
+  
+  # Database configuration - Production
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:prod-db-cluster}:${DB_PORT:5432}/${DB_NAME:techbra_orders_prod}
+    username: ${DB_USERNAME:techbra_orders_prod}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 20
+      minimum-idle: 10
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      connection-test-query: SELECT 1
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: ${SHOW_SQL:false}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        batch_versioned_data: true
+  
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+    validate-on-migrate: true
+    out-of-order: false
+  
+  # Message broker configuration (RabbitMQ) - Production
+  rabbitmq:
+    host: ${RABBITMQ_HOST:prod-rabbitmq-cluster}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: ${RABBITMQ_VHOST:/prod}
+    connection-timeout: 60000
+    publisher-confirm-type: correlated
+    publisher-returns: true
+
+server:
+  port: 8083
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+  http2:
+    enabled: true
+
+# External service integrations - Production
+services:
+  customer:
+    url: ${CUSTOMER_SERVICE_URL:https://customer-service.techbra.com/api}
+    timeout: ${CUSTOMER_SERVICE_TIMEOUT:2000}
+  
+  product-catalog:
+    url: ${PRODUCT_CATALOG_SERVICE_URL:https://product-catalog-service.techbra.com/api}
+    timeout: ${PRODUCT_CATALOG_SERVICE_TIMEOUT:2000}
+  
+  billing:
+    url: ${BILLING_SERVICE_URL:https://billing-service.techbra.com/api}
+    timeout: ${BILLING_SERVICE_TIMEOUT:3000}
+  
+  inventory:
+    url: ${INVENTORY_SERVICE_URL:https://inventory-service.techbra.com/api}
+    timeout: ${INVENTORY_SERVICE_TIMEOUT:2000}
+  
+  notification:
+    url: ${NOTIFICATION_SERVICE_URL:https://notification-service.techbra.com/api}
+    timeout: ${NOTIFICATION_SERVICE_TIMEOUT:2000}
+  
+  config:
+    url: ${CONFIG_SERVICE_URL:https://config-service.techbra.com}
+
+# Order service specific configuration - Production
+order:
+  processing:
+    timeout: 180000 # 3 minutes
+    max-items-per-order: 25
+    auto-cancel-timeout: 900000 # 15 minutes
+  
+  payment:
+    timeout: 30000 # 30 seconds
+    retry-attempts: 2
+  
+  inventory:
+    reservation-timeout: 300000 # 5 minutes
+    auto-release: true
+  
+  status:
+    transitions:
+      pending-to-confirmed: 180000 # 3 minutes
+      confirmed-to-processing: 30000 # 30 seconds
+      processing-to-shipped: 43200000 # 12 hours
+
+# Application specific properties - Production
+app:
+  order:
+    max-items-per-order: ${MAX_ITEMS_PER_ORDER:25}
+    default-timeout: ${DEFAULT_TIMEOUT:15000}
+    enable-notifications: ${ENABLE_NOTIFICATIONS:true}
+
+# Circuit breaker configuration - Production (strict)
+resilience4j:
+  circuitbreaker:
+    instances:
+      customer-service:
+        register-health-indicator: true
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 30
+        wait-duration-in-open-state: 60s
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 2s
+      
+      product-catalog-service:
+        register-health-indicator: true
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 30
+        wait-duration-in-open-state: 60s
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 2s
+      
+      billing-service:
+        register-health-indicator: true
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 20
+        wait-duration-in-open-state: 120s
+        slow-call-rate-threshold: 30
+        slow-call-duration-threshold: 3s
+      
+      inventory-service:
+        register-health-indicator: true
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 25
+        wait-duration-in-open-state: 60s
+        slow-call-rate-threshold: 40
+        slow-call-duration-threshold: 2s
+  
+  retry:
+    instances:
+      billing-service:
+        max-attempts: 2
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+      
+      inventory-service:
+        max-attempts: 2
+        wait-duration: 300ms
+        enable-exponential-backoff: true
+
+# Message queues configuration - Production
+rabbitmq:
+  exchanges:
+    order-events: order.events.prod
+    order-dlx: order.dlx.prod
+  
+  queues:
+    order-created: order.created.prod
+    order-updated: order.updated.prod
+    order-cancelled: order.cancelled.prod
+    payment-processed: payment.processed.prod
+    inventory-reserved: inventory.reserved.prod
+    inventory-released: inventory.released.prod
+  
+  routing-keys:
+    order-created: order.created.prod
+    order-confirmed: order.confirmed.prod
+    order-cancelled: order.cancelled.prod
+    payment-success: payment.success.prod
+    payment-failed: payment.failed.prod
+
+# Logging configuration - Production (minimal)
+logging:
+  level:
+    com.techbra.order: ${LOG_LEVEL:INFO}
+    org.springframework.web: ${WEB_LOG_LEVEL:WARN}
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
+    org.springframework.amqp: WARN
+    root: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/techbra/order-service.log
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 3GB
+
+# Management endpoints - Production (restricted)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never
+  health:
+    db:
+      enabled: true
+    rabbit:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: 60s
+  server:
+    port: 9083
+
+# Application info - Production
+info:
+  app:
+    name: ${spring.application.name}
+    description: Order Management and Processing Service - Production
+    version: 1.0.0
+    environment: production
+  features:
+    - "Order lifecycle management"
+    - "Payment integration"
+    - "Inventory reservation"
+    - "Event-driven architecture"
+    - "RabbitMQ messaging"
+    - "High availability"
+    - "Performance optimized"
