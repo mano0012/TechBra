@@ -9,8 +9,6 @@ WORKDIR /app
 
 # Copy Maven configuration files
 COPY pom.xml .
-COPY .mvn/ .mvn/
-COPY mvnw .
 
 # Download dependencies (cached layer)
 RUN mvn dependency:go-offline -B
@@ -54,7 +52,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 
 # Environment variables
 ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport" \
-    SPRING_PROFILES_ACTIVE="docker" \
     SERVER_PORT=8888
 
 # JVM options for container environment

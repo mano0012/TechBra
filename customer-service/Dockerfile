@@ -1,12 +1,44 @@
-FROM openjdk:17-jdk-slim
+# Multi-stage build for TechBra Customer Service
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
+# Set working directory
 WORKDIR /app
 
-# Copy the pre-built jar file
-COPY target/customer-service-1.0.0.jar app.jar
+# Copy pom.xml and source code
+COPY pom.xml .
+
+# Copy source code and build
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# Runtime stage
+FROM eclipse-temurin:17-jre-alpine
+
+# Create non-root user
+RUN addgroup -g 1001 -S customeruser && \
+    adduser -S customeruser -u 1001 -G customeruser
+
+# Set working directory
+WORKDIR /app
+
+# Copy jar from build stage
+COPY --from=build /app/target/*.jar app.jar
+
+# Change ownership
+RUN chown -R customeruser:customeruser /app
+USER customeruser
+
+# Environment variables for Spring Cloud Config
+ENV SPRING_PROFILES_ACTIVE=dev
+ENV SPRING_CLOUD_CONFIG_URI=http://host.docker.internal:8888
+ENV SPRING_CONFIG_IMPORT=optional:configserver:http://config-admin:config-secret@host.docker.internal:8888
 
 # Expose port
 EXPOSE 8081
 
-# Run application with dev profile
-CMD ["java", "-Dspring.profiles.active=dev", "-jar", "app.jar"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1
+
+# Run application
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]

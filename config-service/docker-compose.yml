@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  config-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: techbra/config-service:latest
+    container_name: config-service
+    ports:
+      - "8888:8888"
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport
+      - SERVER_PORT=8888
+    volumes:
+      - ./src/main/resources/config-repo:/app/config-repo:ro
+      - config-logs:/app/logs
+    networks:
+      - techbra-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.config-service.rule=Host(`config.techbra.local`)"
+      - "traefik.http.services.config-service.loadbalancer.server.port=8888"
+
+volumes:
+  config-logs:
+    driver: local
+
+networks:
+  techbra-network:
+    driver: bridge
+    name: techbra-network

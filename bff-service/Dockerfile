@@ -1,19 +1,16 @@
 # Multi-stage build for BFF Service
 # Stage 1: Build stage
-FROM maven:3.9.4-openjdk-21-slim AS builder
+FROM maven:3.8-openjdk-17-slim AS builder
 
 WORKDIR /app
 
-# Copy pom.xml first for better layer caching
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
 # Copy source code and build
+COPY pom.xml .
 COPY src ./src
 RUN mvn clean package -DskipTests -B
 
 # Stage 2: Runtime stage
-FROM openjdk:21-jre-slim
+FROM eclipse-temurin:17-jre
 
 # Create non-root user for security
 RUN groupadd -r bffuser && useradd -r -g bffuser bffuser
