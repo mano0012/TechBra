@@ -56,6 +56,14 @@ public class ShipmentRepositoryAdapter implements ShipmentRepositoryPort {
     }
     
     @Override
+    public List<Shipment> findAllByOrderId(Long orderId) {
+        logger.debug("Buscando envios por Order ID: {}", orderId);
+        
+        List<ShipmentEntity> entities = jpaRepository.findAllByOrderId(orderId);
+        return mapper.toDomainList(entities);
+    }
+    
+    @Override
     public List<Shipment> findAll() {
         logger.debug("Listando todos os envios");
         

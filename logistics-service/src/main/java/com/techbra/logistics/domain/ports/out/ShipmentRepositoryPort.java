@@ -30,6 +30,13 @@ public interface ShipmentRepositoryPort {
     Optional<Shipment> findByOrderId(Long orderId);
     
     /**
+     * Busca envios pelo ID do pedido (pode haver múltiplos)
+     * @param orderId ID do pedido
+     * @return lista de envios do pedido
+     */
+    List<Shipment> findAllByOrderId(Long orderId);
+    
+    /**
      * Lista todos os envios
      * @return lista de todos os envios
      */

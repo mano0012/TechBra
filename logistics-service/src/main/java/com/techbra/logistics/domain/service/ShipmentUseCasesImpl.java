@@ -160,4 +160,37 @@ public class ShipmentUseCasesImpl implements ShipmentUseCases {
         
         return now.plusDays(addedDays);
     }
+    
+    @Override
+    public Shipment createShipment(Shipment shipment) {
+        logger.info("Criando novo envio para pedido ID: {}", shipment.getOrderId());
+        
+        // Define valores padrão se não estiverem definidos
+        if (shipment.getCreatedAt() == null) {
+            shipment.setCreatedAt(LocalDateTime.now());
+        }
+        if (shipment.getUpdatedAt() == null) {
+            shipment.setUpdatedAt(LocalDateTime.now());
+        }
+        if (shipment.getStatus() == null) {
+            shipment.setStatus(ShipmentStatus.PENDING);
+        }
+        
+        return shipmentRepository.save(shipment);
+    }
+    
+    @Override
+    public Shipment updateShipment(Shipment shipment) {
+        logger.info("Atualizando envio ID: {}", shipment.getId());
+        
+        shipment.setUpdatedAt(LocalDateTime.now());
+        return shipmentRepository.save(shipment);
+    }
+    
+    @Override
+    public List<Shipment> findByOrderId(Long orderId) {
+        logger.info("Buscando envios para pedido ID: {}", orderId);
+        
+        return shipmentRepository.findAllByOrderId(orderId);
+    }
 }

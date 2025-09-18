@@ -62,6 +62,9 @@ public class ShipmentEntity {
     @Column(name = "tracking_number", length = 50)
     private String trackingNumber;
     
+    @Column(name = "tracking_notes", columnDefinition = "TEXT")
+    private String trackingNotes;
+    
     // Construtores
     public ShipmentEntity() {}
     
@@ -200,6 +203,14 @@ public class ShipmentEntity {
     
     public void setTrackingNumber(String trackingNumber) {
         this.trackingNumber = trackingNumber;
+    }
+    
+    public String getTrackingNotes() {
+        return trackingNotes;
+    }
+    
+    public void setTrackingNotes(String trackingNotes) {
+        this.trackingNotes = trackingNotes;
     }
     
     @Override

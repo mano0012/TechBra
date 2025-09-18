@@ -20,6 +20,7 @@ public class Shipment {
     private LocalDateTime updatedAt;
     private LocalDateTime estimatedDeliveryDate;
     private String trackingNumber;
+    private String trackingNotes;
 
     public Shipment() {
         this.status = ShipmentStatus.PENDING;
@@ -123,12 +124,30 @@ public class Shipment {
         this.id = id;
     }
 
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
+
+    public void setStatus(ShipmentStatus status) {
+        this.status = status;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getTrackingNotes() {
+        return trackingNotes;
+    }
+
+    public void setTrackingNotes(String trackingNotes) {
+        this.trackingNotes = trackingNotes;
+        this.updatedAt = LocalDateTime.now();
     }
 
     @Override

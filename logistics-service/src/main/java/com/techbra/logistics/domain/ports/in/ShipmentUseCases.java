@@ -67,4 +67,25 @@ public interface ShipmentUseCases {
      * @return lista de envios do cliente
      */
     List<Shipment> findShipmentsByCustomerEmail(String customerEmail);
+    
+    /**
+     * Cria um novo envio
+     * @param shipment dados do envio
+     * @return envio criado
+     */
+    Shipment createShipment(Shipment shipment);
+    
+    /**
+     * Atualiza um envio
+     * @param shipment dados do envio
+     * @return envio atualizado
+     */
+    Shipment updateShipment(Shipment shipment);
+    
+    /**
+     * Busca envios por ID do pedido
+     * @param orderId ID do pedido
+     * @return lista de envios do pedido
+     */
+    List<Shipment> findByOrderId(Long orderId);
 }

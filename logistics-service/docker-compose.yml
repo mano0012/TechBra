@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  logistics-postgres:
+    image: postgres:17
+    container_name: logistics-postgres
+    environment:
+      POSTGRES_DB: techbra_logistics
+      POSTGRES_USER: techbra_logistics_admin
+      POSTGRES_PASSWORD: $=[1d"91Edzu
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    networks:
+      - logistics-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U techbra_logistics_admin -d techbra_logistics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - postgres_logistics_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_logistics_data:
+    driver: local
+
+networks:
+  logistics-network:
+    driver: bridge
+  techbra-network:
+    external: true
+    driver: bridge

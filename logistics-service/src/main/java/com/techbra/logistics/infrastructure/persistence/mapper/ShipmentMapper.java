@@ -49,6 +49,10 @@ public class ShipmentMapper {
             shipment.setEstimatedDeliveryDate(entity.getEstimatedDeliveryDate());
         }
         
+        if (entity.getTrackingNotes() != null) {
+            shipment.setTrackingNotes(entity.getTrackingNotes());
+        }
+        
         return shipment;
     }
     
@@ -94,6 +98,10 @@ public class ShipmentMapper {
         
         if (shipment.getEstimatedDeliveryDate() != null) {
             entity.setEstimatedDeliveryDate(shipment.getEstimatedDeliveryDate());
+        }
+        
+        if (shipment.getTrackingNotes() != null) {
+            entity.setTrackingNotes(shipment.getTrackingNotes());
         }
         
         return entity;

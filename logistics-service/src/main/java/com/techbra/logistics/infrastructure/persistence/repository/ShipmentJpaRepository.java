@@ -19,6 +19,11 @@ public interface ShipmentJpaRepository extends JpaRepository<ShipmentEntity, Lon
     Optional<ShipmentEntity> findByOrderId(Long orderId);
     
     /**
+     * Busca todos os envios pelo ID do pedido
+     */
+    List<ShipmentEntity> findAllByOrderId(Long orderId);
+    
+    /**
      * Verifica se existe um envio para o pedido especificado
      */
     boolean existsByOrderId(Long orderId);
