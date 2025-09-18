@@ -1,0 +1,83 @@
+# Configurações de teste para Billing Service
+server:
+  port: 8084
+
+spring:
+  application:
+    name: billing-service
+  profiles:
+    active: test
+  
+  # Configuração do banco de dados em memória para testes
+  datasource:
+    url: jdbc:h2:mem:billing_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  
+  # Configuração JPA
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  
+  # H2 Console para debug
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  # Flyway desabilitado para testes
+  flyway:
+    enabled: false
+
+# Configurações de logging para testes
+logging:
+  level:
+    com.techbra.billing: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+    org.springframework.test: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Configurações do Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Configurações específicas da aplicação para testes
+billing:
+  payment:
+    timeout: 5000
+    retry-attempts: 1
+  invoice:
+    generation:
+      enabled: false
+      format: PDF
+  notification:
+    email:
+      enabled: false
+      from: billing-test@techbra.com
+  integration:
+    order-service:
+      url: http://localhost:8083
+      timeout: 2000
+    customer-service:
+      url: http://localhost:8081
+      timeout: 2000
+
+# Configurações de teste específicas
+test:
+  data:
+    cleanup: true
+  mock:
+    external-services: true

@@ -1,0 +1,79 @@
+# Configurações de desenvolvimento para Billing Service
+server:
+  port: 8084
+
+spring:
+  application:
+    name: billing-service
+  profiles:
+    active: dev
+  
+  # Configuração do banco de dados
+  datasource:
+    url: jdbc:postgresql://localhost:5432/billing_dev
+    username: billing_user
+    password: billing_pass
+    driver-class-name: org.postgresql.Driver
+  
+  # Configuração JPA
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  # Flyway para migração de banco
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+# Configurações de logging
+logging:
+  level:
+    com.techbra.billing: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/billing-service-dev.log
+
+# Configurações do Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+# Configurações específicas da aplicação
+billing:
+  payment:
+    timeout: 30000
+    retry-attempts: 3
+  invoice:
+    generation:
+      enabled: true
+      format: PDF
+  notification:
+    email:
+      enabled: true
+      from: billing-dev@techbra.com
+  integration:
+    order-service:
+      url: http://localhost:8083
+      timeout: 5000
+    customer-service:
+      url: http://localhost:8081
+      timeout: 5000

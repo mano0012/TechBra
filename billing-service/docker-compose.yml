@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  billing-postgres:
+    image: postgres:15-alpine
+    container_name: billing-postgres
+    environment:
+      POSTGRES_DB: billing_service_db
+      POSTGRES_USER: billing_user
+      POSTGRES_PASSWORD: billing_pass123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5434:5432"
+    volumes:
+      - billing_postgres_data:/var/lib/postgresql/data
+      - ./docker/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - billing-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U billing_user -d billing_service_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis para cache
+  billing-redis:
+    image: redis:7-alpine
+    container_name: billing-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - billing_redis_data:/data
+    networks:
+      - billing-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  # Config Service (dependência)
+  config-service:
+    image: techbra/config-service:latest
+    container_name: config-service
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - billing-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # Billing Service
+  billing-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: billing-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://billing-postgres:5432/billing_service_db
+      - SPRING_DATASOURCE_USERNAME=billing_user
+      - SPRING_DATASOURCE_PASSWORD=billing_pass123
+      - SPRING_REDIS_HOST=billing-redis
+      - SPRING_REDIS_PORT=6379
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus
+      - LOGGING_LEVEL_COM_TECHBRA_BILLING=DEBUG
+    depends_on:
+      billing-postgres:
+        condition: service_healthy
+      billing-redis:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+    networks:
+      - billing-network
+    volumes:
+      - billing_logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+    restart: unless-stopped
+
+  # Adminer para administração do banco
+  billing-adminer:
+    image: adminer:4.8.1
+    container_name: billing-adminer
+    ports:
+      - "8084:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: billing-postgres
+      ADMINER_DESIGN: pepa-linha
+    depends_on:
+      - billing-postgres
+    networks:
+      - billing-network
+    restart: unless-stopped
+
+volumes:
+  billing_postgres_data:
+    driver: local
+  billing_redis_data:
+    driver: local
+  billing_logs:
+    driver: local
+
+networks:
+  billing-network:
+    driver: bridge
+    name: billing-network
+  # Rede externa para comunicação com outros serviços
+  techbra-network:
+    external: true
+    name: techbra-network
