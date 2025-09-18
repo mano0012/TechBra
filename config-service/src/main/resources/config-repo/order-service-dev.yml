@@ -7,7 +7,7 @@ spring:
   
   # Database configuration
   datasource:
-    url: ${DB_URL:jdbc:postgresql://order-postgres:5432/techbra_orders}
+    url: ${DB_URL:jdbc:postgresql://localhost:5435/techbra_orders}
     username: ${DB_USERNAME:techbra_order_admin}
     password: ${DB_PASSWORD:$=[1d"91Edzu}
     driver-class-name: org.postgresql.Driver

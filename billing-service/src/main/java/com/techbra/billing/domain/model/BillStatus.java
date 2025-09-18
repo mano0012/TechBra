@@ -10,7 +10,17 @@ public enum BillStatus {
     CREATED,
     
     /**
+     * Status quando a fatura está pendente de pagamento.
+     */
+    PENDING,
+    
+    /**
      * Status quando a fatura foi paga.
      */
-    PAID
+    PAID,
+    
+    /**
+     * Status quando a fatura foi cancelada.
+     */
+    CANCELLED
 }

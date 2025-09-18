@@ -10,9 +10,9 @@ spring:
   
   # Configuração do banco de dados
   datasource:
-    url: jdbc:postgresql://localhost:5432/billing_dev
-    username: billing_user
-    password: billing_pass
+    url: jdbc:postgresql://localhost:5436/techbra_billings
+    username: techbra_billing_admin
+    password: $=[1d"91Edzu
     driver-class-name: org.postgresql.Driver
   
   # Configuração JPA

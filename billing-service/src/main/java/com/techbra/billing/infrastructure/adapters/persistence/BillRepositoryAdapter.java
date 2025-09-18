@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class BillRepositoryAdapter implements BillRepositoryPort {
@@ -24,6 +25,11 @@ public class BillRepositoryAdapter implements BillRepositoryPort {
     @Override
     public Optional<Bill> findById(Long id) {
         return billJpaRepository.findById(id);
+    }
+    
+    @Override
+    public Optional<Bill> findByOrderId(UUID orderId) {
+        return billJpaRepository.findByOrderId(orderId);
     }
     
     @Override

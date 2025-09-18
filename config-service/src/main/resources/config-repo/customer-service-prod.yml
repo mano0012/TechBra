@@ -1,14 +1,14 @@
-# TechBra Order Service - Default Configuration
-# Microservice responsible for order management and authentication
+# TechBra Customer Service - Default Configuration
+# Microservice responsible for customer management and authentication
 
 spring:
   application:
-    name: order-service
+    name: customer-service
   
   # Database configuration
   datasource:
-    url: ${DB_URL:jdbc:postgresql://order-postgres:5432/techbra_orders}
-    username: ${DB_USERNAME:techbra_order_admin}
+    url: ${DB_URL:jdbc:postgresql://localhost:5434/techbra_customers}
+    username: ${DB_USERNAME:techbra_customer_admin}
     password: ${DB_PASSWORD:$=[1d"91Edzu}
     driver-class-name: org.postgresql.Driver
   
@@ -39,8 +39,8 @@ services:
   config:
     url: ${CONFIG_SERVICE_URL:http://localhost:8888}
 
-# order service specific configuration
-order:
+# Customer service specific configuration
+customer:
   password:
     min-length: 8
     require-uppercase: true
@@ -92,5 +92,5 @@ management:
 info:
   app:
     name: ${spring.application.name}
-    description: Order Management and Authentication Service
+    description: Customer Management and Authentication Service
     version: 1.0.0-SNAPSHOT

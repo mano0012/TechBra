@@ -5,6 +5,7 @@ import com.techbra.order.domain.OrderItem;
 import com.techbra.order.domain.OrderStatus;
 import com.techbra.order.domain.ports.in.OrderUseCase;
 import com.techbra.order.domain.ports.out.OrderRepositoryPort;
+import com.techbra.order.service.OrderEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,9 +32,11 @@ import java.util.stream.Collectors;
 public class OrderService implements OrderUseCase {
     
     private final OrderRepositoryPort orderRepositoryPort;
-    
-    public OrderService(OrderRepositoryPort orderRepositoryPort) {
+    private final OrderEventPublisher orderEventPublisher;
+
+    public OrderService(OrderRepositoryPort orderRepositoryPort, OrderEventPublisher orderEventPublisher) {
         this.orderRepositoryPort = orderRepositoryPort;
+        this.orderEventPublisher = orderEventPublisher;
     }
     
     /**
@@ -45,6 +48,7 @@ public class OrderService implements OrderUseCase {
      * @param paymentMethod método de pagamento
      * @return o pedido criado
      */
+    @Transactional
     public Order createOrder(UUID customerId, String shippingAddress, 
                            String billingAddress, String paymentMethod) {
         
@@ -56,7 +60,20 @@ public class OrderService implements OrderUseCase {
         order.setShippingAddress(shippingAddress);
         order.setBillingAddress(billingAddress);
         order.setPaymentMethod(paymentMethod);
-        return orderRepositoryPort.save(order);
+        
+        // Salvar o pedido no banco de dados
+        Order savedOrder = orderRepositoryPort.save(order);
+        
+        // Publicar evento de criação do pedido no Kafka
+        try {
+            orderEventPublisher.publishOrderCreatedEvent(savedOrder);
+        } catch (Exception e) {
+            // Log do erro, mas não falha a transação principal
+            // Em um cenário real, poderia implementar retry ou dead letter queue
+            System.err.println("Erro ao publicar evento de criação do pedido: " + e.getMessage());
+        }
+        
+        return savedOrder;
     }
     
     /**

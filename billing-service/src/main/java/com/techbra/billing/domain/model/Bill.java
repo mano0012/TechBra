@@ -3,6 +3,7 @@ package com.techbra.billing.domain.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "bills")
@@ -10,6 +11,9 @@ public class Bill {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
+    @Column(name = "order_id", nullable = false)
+    private UUID orderId;
     
     @Column(nullable = false)
     private String description;
@@ -30,9 +34,26 @@ public class Bill {
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
     
+    @Column(name = "cancelled_at")
+    private LocalDateTime cancelledAt;
+    
+    @Column(name = "cancellation_reason")
+    private String cancellationReason;
+    
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+    
     public Bill() {
         this.createdAt = LocalDateTime.now();
         this.status = BillStatus.CREATED;
+    }
+    
+    public Bill(UUID orderId, String description, BigDecimal amount, LocalDateTime dueDate) {
+        this();
+        this.orderId = orderId;
+        this.description = description;
+        this.amount = amount;
+        this.dueDate = dueDate;
     }
     
     public Bill(String description, BigDecimal amount, LocalDateTime dueDate) {
@@ -45,6 +66,9 @@ public class Bill {
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    
+    public UUID getOrderId() { return orderId; }
+    public void setOrderId(UUID orderId) { this.orderId = orderId; }
     
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
@@ -63,6 +87,15 @@ public class Bill {
     
     public LocalDateTime getPaidAt() { return paidAt; }
     public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
+    
+    public LocalDateTime getCancelledAt() { return cancelledAt; }
+    public void setCancelledAt(LocalDateTime cancelledAt) { this.cancelledAt = cancelledAt; }
+    
+    public String getCancellationReason() { return cancellationReason; }
+    public void setCancellationReason(String cancellationReason) { this.cancellationReason = cancellationReason; }
+    
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
     
     /**
      * Marca a fatura como paga.
